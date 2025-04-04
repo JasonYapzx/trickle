@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/providers/auth-provider";
+import { Toaster } from "sonner";
+import { WebhookListener } from "@/components/webhook-listener";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -17,17 +19,18 @@ export const metadata: Metadata = {
   description: "Microinvesting for anyone",
 };
 
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body className={`${dmSans.variable}`}>
+    <html lang="en" className={dmSans.variable}>
+      <body>
         <AuthProvider>
           {children}
+          <WebhookListener />
+          <Toaster />
         </AuthProvider>
       </body>
     </html>
