@@ -122,7 +122,7 @@ export function IncompatibleBrowserAlert({
       <AlertCircle className="h-4 w-4" />
       <AlertTitle>Error: {currentError.title}</AlertTitle>
       <AlertDescription>
-        <p>{currentError.message}</p>
+        <p>{currentError.error}</p>
       </AlertDescription>
     </Alert>
   );

@@ -5,7 +5,6 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
 }
 
-<<<<<<< HEAD
 export function formatCurrency(value: number): string {
     return new Intl.NumberFormat("en-US", {
         style: "currency",
@@ -18,7 +17,6 @@ export function formatCurrency(value: number): string {
 export function formatPercentage(value: number): string {
     return `${value >= 0 ? "↑" : "↓"} ${Math.abs(value).toFixed(2)}%`;
 }
-=======
 
 export async function checkEnv() {
   function getChromeVersion() {
@@ -29,7 +27,6 @@ export async function checkEnv() {
   if (navigator.userAgentData?.brands) {
     // @ts-expect-error
     const isChrome = navigator.userAgentData?.brands.some(
-      // @ts-expect-error
       (brandInfo) => brandInfo.brand === "Google Chrome",
     );
 
@@ -72,4 +69,3 @@ export async function checkEnv() {
     );
   }
 }
->>>>>>> a5f488a (feat: add gemini querying + gemini nano working)

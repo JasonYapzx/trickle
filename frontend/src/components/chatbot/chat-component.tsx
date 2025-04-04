@@ -5,7 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { MemoizedReactMarkdown } from "./rendering/markdown";
 import { useScrollAnchor } from "@/hooks/use-scroll-anchor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { systemPrompt } from "@/app/api/chat/gemini/route";
+import { systemPrompt } from "@/app/app/chatbot/page";
 import EmptyScreen from "./empty-screen";
 import { Textarea } from "../ui/textarea";
 import { TransactionList } from "./rendering/transaction-list";
