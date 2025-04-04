@@ -1,4 +1,17 @@
 import type { NextConfig } from "next";
+import path from "path";
+
+const fs = require('fs');
+
+const rootEnvPath = path.resolve(__dirname, '../.env');
+if (fs.existsSync(rootEnvPath)) {
+  require('dotenv').config({ path: rootEnvPath });
+  console.log('Loaded environment variables from root .env file');
+} else {
+  console.log('No root .env file found');
+  // Fallback to local .env if it exists
+  require('dotenv').config();
+}
 
 const nextConfig: NextConfig = {
   async headers() {
