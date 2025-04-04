@@ -8,11 +8,13 @@ import {
 } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase";
 import { useEffect, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface User {
   name: string;
   email: string;
   wallet_address: string;
+  display_picture?: string;
 }
 interface Portfolio {
   token: string;
@@ -64,7 +66,12 @@ export default function ProfilePage() {
       <Card>
         <CardHeader>
           <CardTitle>Profile</CardTitle>
-          <CardDescription>Your profile information</CardDescription>
+          <div className="flex justify-center my-6">
+            <Avatar className="h-50 w-50">
+              <AvatarImage src={user?.display_picture || ''} alt={user?.name || ''} />
+              <AvatarFallback className="text-2xl">{user?.name?.charAt(0) || '?'}</AvatarFallback>
+            </Avatar>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
