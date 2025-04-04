@@ -1,15 +1,8 @@
 "use client";
 
-import {
-  CheckCircle2Icon,
-  ChevronDown,
-  CopyIcon,
-  ExternalLinkIcon,
-  MoreHorizontalIcon,
-} from "lucide-react";
+import { CheckCircle2Icon, ChevronDown, CopyIcon } from "lucide-react";
 import { useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -84,30 +77,7 @@ export default function Dashboard() {
                         <CopyIcon className="h-3.5 w-3.5" />
                       )}
                     </Button>
-                    <Button variant="default" size="icon" className="h-6 w-6">
-                      <ExternalLinkIcon className="h-3.5 w-3.5" />
-                    </Button>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant="outline"
-                    className="rounded-sm px-1 py-0 text-xs"
-                  >
-                    Ethereum
-                  </Badge>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="default" size="icon" className="h-7 w-7">
-                        <MoreHorizontalIcon className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View on Explorer</DropdownMenuItem>
-                      <DropdownMenuItem>Export Transactions</DropdownMenuItem>
-                      <DropdownMenuItem>Disconnect</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </div>
               </CardHeader>
             </Card>
