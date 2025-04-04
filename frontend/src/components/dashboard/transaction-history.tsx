@@ -133,7 +133,6 @@ export function TransactionHistory({
           const tokenActions = tx?.details?.tokenActions;
           const tokenAddress = tokenActions?.[tokenActions.length - 1]?.address;
           if (tokenAddress) {
-            console.log(tokenAddress);
             tokenParams.append("addresses", tokenAddress);
           }
         });
@@ -148,7 +147,6 @@ export function TransactionHistory({
           }
         );
         const tokenData = await tokenRes.json();
-        console.log(tokenData);
         const tokenTransactionData = transactionData.items.map((trx: any) => {
           const tokenActions = trx?.details?.tokenActions;
 
@@ -161,7 +159,6 @@ export function TransactionHistory({
             },
           };
         });
-        console.log(tokenTransactionData);
 
         // You may need to format the data depending on the API response
         const parsed: Transaction[] = tokenTransactionData?.map(

@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { AssetAllocationChart } from "@/components/dashboard/asset-allocation-chart";
+import { AssetAllocationCard } from "@/components/dashboard/assetAllocation/asset-allocation-card";
 import { PortfolioCard } from "@/components/dashboard/portfolio/portfolio-card";
 import { TransactionHistory } from "../../../components/dashboard/transaction-history";
 
@@ -141,56 +141,11 @@ export default function Dashboard() {
             setTimerange={setPortfolioTimeRange}
             chain_id={chains.find((c) => c.name == selectedChain).id}
           />
-          <Card className="col-span-full lg:col-span-1">
-            <CardHeader>
-              <CardTitle>Asset Allocation</CardTitle>
-              <CardDescription>Breakdown of your portfolio</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="h-[240px] w-full">
-                  <AssetAllocationChart />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-primary"></div>
-                      <span className="text-sm font-medium">ETH</span>
-                    </div>
-                    <div className="text-sm">42.5%</div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-                      <span className="text-sm font-medium">BTC</span>
-                    </div>
-                    <div className="text-sm">28.3%</div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                      <span className="text-sm font-medium">USDC</span>
-                    </div>
-                    <div className="text-sm">15.2%</div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
-                      <span className="text-sm font-medium">LINK</span>
-                    </div>
-                    <div className="text-sm">8.7%</div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-purple-500"></div>
-                      <span className="text-sm font-medium">Others</span>
-                    </div>
-                    <div className="text-sm">5.3%</div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <AssetAllocationCard
+            address={walletAddress}
+            chain_id={chains.find((c) => c.name == selectedChain).id}
+          />
+
           <Card className="col-span-full">
             <CardHeader className="flex flex-row items-center">
               <div className="grid gap-2">

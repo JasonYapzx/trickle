@@ -31,11 +31,9 @@ export function PortfolioChart({ chartData }: { chartData: any }) {
   const chartRef = useRef<Chart<"line"> | undefined>(undefined);
 
   useEffect(() => {
-    console.log(chartData);
     const chart = chartRef.current;
 
     if (!chart || !chartData) return;
-    console.log("here");
 
     const gradient = chart.ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, "rgba(99, 102, 241, 0.4)");
