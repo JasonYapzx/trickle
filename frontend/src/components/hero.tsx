@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGeolocation } from '@/hooks/use-geolocation';
 import { MorphingText } from './magicui/morphing-text';
+import { SignIn } from './auth/sign-in';
 
 const texts = [
   "GROW",
@@ -103,8 +104,7 @@ export default function Hero() {
           </div>
           <nav className="flex gap-3 text-sm">
             <a href="/app" className="hover:opacity-70 transition-opacity">Dashboard</a>
-            <a href="/app/settings" className="hover:opacity-70 transition-opacity">Settings</a>
-            {/* <SignIn/> */}
+            <SignIn />
           </nav>
         </div>
 
