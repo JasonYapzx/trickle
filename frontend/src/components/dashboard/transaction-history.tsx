@@ -41,6 +41,52 @@ interface Transaction {
   hash: string;
 }
 
+export interface TokenAction {
+  chainId: string;
+  address: string;
+  standard: string;
+}
+
+export interface TransactionDetails {
+  txHash: string;
+  chainId: number;
+  blockNumber: number;
+  blockTimeSec: number;
+  feeInSmallestNative: string;
+  fromAddress: string;
+  toAddress: string;
+  nativeTokenPriceToUsd: number | null;
+  nonce: number;
+  orderInBlock: number;
+  status: string;
+  tokenActions?: TokenAction[];
+  type: string;
+}
+
+export interface TransactionItem {
+  address: string;
+  direction: "in" | "out";
+  eventOrderInTransaction: number;
+  id: string;
+  rating: string;
+  timeMs: number;
+  type: number | string; // could be "Receive" or numeric depending on source
+  details?: TransactionDetails;
+  tokenInfo?: TokenInfo;
+}
+
+export interface TokenInfo {
+  address: string;
+  chainId: number;
+  decimals: number;
+  eip2612: boolean;
+  name: string;
+  symbol: string;
+  rating: number;
+  providers: string[]; // assuming it's an array of strings
+  tags: string[]; // assuming it's an array of strings
+}
+
 const chainIdToName: Record<number, string> = {
   1: "Ethereum",
   10: "Optimism",
@@ -128,8 +174,7 @@ export function TransactionHistory({
 
         const tokenParams = new URLSearchParams();
         tokenParams.append("chain_id", chain_id);
-        console.log(transactionData.items);
-        transactionData.items?.forEach((tx: any) => {
+        transactionData.items?.forEach((tx: TransactionItem) => {
           const tokenActions = tx?.details?.tokenActions;
           const tokenAddress = tokenActions?.[tokenActions.length - 1]?.address;
           if (tokenAddress) {
@@ -147,22 +192,25 @@ export function TransactionHistory({
           }
         );
         const tokenData = await tokenRes.json();
-        const tokenTransactionData = transactionData.items.map((trx: any) => {
-          const tokenActions = trx?.details?.tokenActions;
 
-          return {
-            ...trx,
-            tokenInfo: {
-              ...tokenData?.[
-                trx?.details?.tokenActions?.[tokenActions.length - 1]?.address
-              ],
-            },
-          };
-        });
+        const tokenTransactionData = transactionData.items.map(
+          (trx: TransactionItem) => {
+            const tokenActions = trx?.details?.tokenActions;
+
+            return {
+              ...trx,
+              tokenInfo: {
+                ...tokenData?.[
+                  trx?.details?.tokenActions?.[tokenActions.length - 1]?.address
+                ],
+              },
+            };
+          }
+        );
 
         // You may need to format the data depending on the API response
         const parsed: Transaction[] = tokenTransactionData?.map(
-          (item: any, index: number) => ({
+          (item: TransactionItem, index: number) => ({
             id: item.id || `${index}`,
             type: item.details.type || "Send", // You may need to map API event types to 'Send' | 'Receive' | 'Transfer'
             chainId: item.details.chainId || 1,
@@ -182,7 +230,7 @@ export function TransactionHistory({
         );
         setTransactions(parsed || []);
         const uniqueChains: number[] = [
-          ...new Set(parsed.map((t: any) => t.chainId)),
+          ...new Set(parsed.map((t: Transaction) => t.chainId)),
         ];
         setAvailableChains(uniqueChains);
         setSelectedChainId((prev) => prev ?? uniqueChains[0]); // only set once
