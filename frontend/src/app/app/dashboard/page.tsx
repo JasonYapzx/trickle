@@ -135,8 +135,12 @@ export default function Dashboard() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-
-          <PortfolioCard />
+          <PortfolioCard
+            address={walletAddress}
+            timerange={portfolioTimeRange}
+            setTimerange={setPortfolioTimeRange}
+            chain_id={chains.find((c) => c.name == selectedChain).id}
+          />
           <Card className="col-span-full lg:col-span-1">
             <CardHeader>
               <CardTitle>Asset Allocation</CardTitle>
@@ -195,19 +199,6 @@ export default function Dashboard() {
                   Recent activity on your wallet
                 </CardDescription>
               </div>
-              {/* <div className="ml-auto flex items-center gap-2">
-                <Button variant="neutral" size="sm" className="h-8 gap-1">
-                  <FilterIcon className="h-3.5 w-3.5" />
-                  <span>Filter</span>
-                  <ChevronDownIcon className="h-3.5 w-3.5" />
-                </Button>
-                <div className="relative w-[180px] sm:w-[240px]">
-                  <Input
-                    placeholder="Search transactions..."
-                    className="h-8 w-full"
-                  />
-                </div>
-              </div> */}
             </CardHeader>
             <CardContent>
               <Tabs
@@ -236,7 +227,7 @@ export default function Dashboard() {
               <TransactionHistory
                 address={walletAddress}
                 type={transactionType}
-                chain_id={"1"}
+                chain_id={chains.find((c) => c.name == selectedChain).id}
               />
             </CardContent>
           </Card>
