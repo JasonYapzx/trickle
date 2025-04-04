@@ -13,13 +13,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 interface User {
   name: string;
   email: string;
-  wallet_address: string;
-  display_picture?: string;
+  walletAddress: string;
+  displayPicture?: string;
 }
 interface Portfolio {
   token: string;
   proportion: GLfloat;
-  token_address: string;
+  tokenAddress: string;
 }
 
 export default function ProfilePage() {
@@ -68,7 +68,7 @@ export default function ProfilePage() {
           <CardTitle>Profile</CardTitle>
           <div className="flex justify-center my-6">
             <Avatar className="h-50 w-50">
-              <AvatarImage src={user?.display_picture || ''} alt={user?.name || ''} />
+              <AvatarImage src={user?.displayPicture || ''} alt={user?.name || ''} />
               <AvatarFallback className="text-2xl">{user?.name?.charAt(0) || '?'}</AvatarFallback>
             </Avatar>
           </div>
@@ -88,7 +88,7 @@ export default function ProfilePage() {
                 <div className="col-span-2">{user.email}</div>
                 
                 <div className="font-semibold">Address:</div>
-                <div className="col-span-2 break-all">{user.wallet_address}</div>
+                <div className="col-span-2 break-all">{user.walletAddress}</div>
               </div>
             </div>
           ) : (
@@ -119,7 +119,7 @@ export default function ProfilePage() {
                     <div className="col-span-2 font-bold">{item.proportion}</div>
                     
                     <div className="font-semibold">Token Address:</div>
-                    <div className="col-span-2 break-all">{item.token_address}</div>
+                    <div className="col-span-2 break-all">{item.tokenAddress}</div>
                   </div>
                   {index < portfolio.length - 1 && <hr className="my-4" />}
                 </div>
