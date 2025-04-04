@@ -73,8 +73,8 @@ export default function Dashboard() {
       <p className="text-muted-foreground text-sm">Loading wallet...</p>
     </div>
   ) : (
-    <div className="flex min-h-screen w-full">
-      <div className="w-3/4 ml-auto">
+    <div className="flex min-h-screen w-full justify-center">
+      <div className="w-full max-w-7xl px-4">
         <main className="grid flex-1 items-start gap-4 p-4 md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:p-6">
           <div className="col-span-full">
             <Card>
