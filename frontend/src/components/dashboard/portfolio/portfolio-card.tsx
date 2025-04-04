@@ -36,7 +36,16 @@ export const PortfolioCard = ({
   const [currentProfitAndLoss, setCurrentProfitAndLoss] = useState<
     number | null
   >(null);
-  const [chartData, setChartData] = useState<any>(null);
+  const [chartData, setChartData] = useState<{
+    labels: string[];
+    datasets: {
+      label: string;
+      data: number[];
+      borderColor: string;
+      backgroundColor: string;
+      fill: boolean;
+    }[];
+  } | null>(null);
 
   useEffect(() => {
     async function fetchPortfolioGeneral() {

@@ -128,7 +128,7 @@ export function TransactionHistory({
 
         const tokenParams = new URLSearchParams();
         tokenParams.append("chain_id", chain_id);
-
+        console.log(transactionData.items);
         transactionData.items?.forEach((tx: any) => {
           const tokenActions = tx?.details?.tokenActions;
           const tokenAddress = tokenActions?.[tokenActions.length - 1]?.address;

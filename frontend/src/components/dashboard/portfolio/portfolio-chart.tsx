@@ -3,6 +3,7 @@
 import {
   CategoryScale,
   Chart,
+  ChartData,
   Chart as ChartJS,
   Filler,
   Legend,
@@ -27,7 +28,11 @@ ChartJS.register(
   Legend
 );
 
-export function PortfolioChart({ chartData }: { chartData: any }) {
+export function PortfolioChart({
+  chartData,
+}: {
+  chartData: ChartData<"line", number[], string> | null;
+}) {
   const chartRef = useRef<Chart<"line"> | undefined>(undefined);
 
   useEffect(() => {
