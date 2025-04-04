@@ -59,16 +59,18 @@ export const PortfolioCard = ({
         `/api/1inch/portfolio/general?${params.toString()}`
       );
       const { value, profitAndLoss, chart } = await res.json();
-
+      console.log(value);
+      console.log(profitAndLoss);
+      console.log(chart);
       if (value.result && value.result.length > 0) {
         setCurrentValue(value.result[0].value_usd);
       }
 
-      if (profitAndLoss.result && profitAndLoss.result.length > 0) {
+      if (profitAndLoss?.result && profitAndLoss.result.length > 0) {
         setCurrentProfitAndLoss(
           profitAndLoss.result.find(
             (data: { chain_id: number }) => data.chain_id === parseInt(chain_id)
-          ).roi
+          )?.roi
         );
       }
 

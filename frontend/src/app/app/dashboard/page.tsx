@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle2Icon, ChevronDown, CopyIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { AssetAllocationCard } from "@/components/dashboard/assetAllocation/asset-allocation-card";
 import { PortfolioCard } from "@/components/dashboard/portfolio/portfolio-card";
+import { createClient } from "@/lib/supabase";
 import { TransactionHistory } from "../../../components/dashboard/transaction-history";
 
 export default function Dashboard() {
@@ -29,8 +30,11 @@ export default function Dashboard() {
     "All" | "Send" | "Receive" | "Transfer" | undefined
   >(undefined);
   const [portfolioTimeRange, setPortfolioTimeRange] = useState<string>("1day");
-  const walletAddress = "0x7bfee91193d9df2ac0bfe90191d40f23c773c060";
+  //   const dummyWalletAddress = "0x7bfee91193d9df2ac0bfe90191d40f23c773c060";
+  const [walletAddress, setWalletAddress] = useState("");
   const [selectedChain, setSelectedChain] = useState<string>("Ethereum");
+  const [loading, setLoading] = useState(false);
+  const supaBase = createClient();
 
   const chains = [
     { name: "Ethereum", id: "1" },
@@ -50,7 +54,27 @@ export default function Dashboard() {
     )}`;
   };
 
-  return (
+  useEffect(() => {
+    const getCurrentWallet = async () => {
+      setLoading(true);
+      const { data, error } = await supaBase.from("users").select("*").single();
+      if (error) {
+        console.error(error);
+      } else {
+        setWalletAddress(data?.walletAddress);
+        console.log("Address: ", data?.walletAddress);
+      }
+      setLoading(false);
+    };
+
+    getCurrentWallet();
+  }, []);
+
+  return loading || !walletAddress ? (
+    <div className="flex min-h-screen w-full items-center justify-center">
+      <p className="text-muted-foreground text-sm">Loading wallet...</p>
+    </div>
+  ) : (
     <div className="flex min-h-screen w-full">
       <div className="w-3/4 ml-auto">
         <main className="grid flex-1 items-start gap-4 p-4 md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:p-6">

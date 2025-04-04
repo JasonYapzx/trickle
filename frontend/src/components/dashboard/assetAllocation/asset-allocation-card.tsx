@@ -99,31 +99,44 @@ export function AssetAllocationCard({
         <CardDescription>Breakdown of your portfolio</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div className="h-[240px] w-full">
-            <AssetAllocationChart data={tokens} />
+        {tokens.length === 0 ? (
+          <div className="flex h-[240px] items-center justify-center text-sm text-muted-foreground">
+            No assets found
           </div>
-          <div className="space-y-2">
-            {tokens.map((token, index) => {
-              const percent = ((token.value_usd / totalValue) * 100).toFixed(1);
+        ) : (
+          <div className="space-y-4">
+            <div className="h-[240px] w-full">
+              <AssetAllocationChart data={tokens} />
+            </div>
+            <div className="space-y-2">
+              {tokens.map((token, index) => {
+                const percent = ((token.value_usd / totalValue) * 100).toFixed(
+                  1
+                );
 
-              return (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="h-3 w-3 rounded-full"
-                      style={{
-                        backgroundColor: getColor(index), // use a helper for color
-                      }}
-                    ></div>
-                    <span className="text-sm font-medium">{token.symbol}</span>
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-3 w-3 rounded-full"
+                        style={{
+                          backgroundColor: getColor(index), // use a helper for color
+                        }}
+                      ></div>
+                      <span className="text-sm font-medium">
+                        {token.symbol}
+                      </span>
+                    </div>
+                    <div className="text-sm">{percent}%</div>
                   </div>
-                  <div className="text-sm">{percent}%</div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
