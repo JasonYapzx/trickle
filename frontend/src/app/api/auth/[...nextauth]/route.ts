@@ -3,7 +3,6 @@ import NextAuth, { NextAuthOptions } from "next-auth";
 const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   
-  // Add these configuration options
   useSecureCookies: process.env.NODE_ENV === "production",
   cookies: {
     sessionToken: {
@@ -16,7 +15,7 @@ const authOptions: NextAuthOptions = {
       },
     },
   },
-
+  
   providers: [
     {
       id: "worldcoin",
@@ -41,6 +40,14 @@ const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user }) {
       return true;
+    },
+    // Add this to ensure the correct redirect after sign-in
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url
+      return baseUrl
     },
   },
   debug: process.env.NODE_ENV === "development",
