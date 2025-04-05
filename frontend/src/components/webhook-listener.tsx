@@ -27,24 +27,37 @@ export function WebhookListener() {
           const notification = payload.new;
           const name = notification["name"];
           const amount = notification["amount"];
+          const tokenName = notification["token_name"];
 
           let title = "";
 
           if (name === "investment-detected") {
             title = `Transaction logged`;
+            toast.success(title, {
+              description: (
+                <div className="text-black">
+                  A new transaction of $${(amount / 100).toFixed(2)} has been
+                  logged via Trickle's Chrome Extension.
+                </div>
+              ),
+              duration: 120000,
+              icon: "🔔",
+              style: { color: "#000", borderColor: "#68d391" },
+            });
+          } else if (name === "swap-detected") {
+            title = `Swap performed`;
+            toast.success(title, {
+              description: (
+                <div className="text-black">
+                  ${(amount / 100).toFixed(2)} has been invested into{" "}
+                  {tokenName}. Cheers!
+                </div>
+              ),
+              duration: 120000,
+              icon: "🔄",
+              style: { color: "#000", borderColor: "#68d391" },
+            });
           }
-
-          toast.success(title, {
-            description: (
-              <div className="text-black">
-                A new transaction of $${(amount / 100).toFixed(2)} has been
-                logged via Trickle's Chrome Extension.
-              </div>
-            ),
-            duration: 30000,
-            icon: "🔔",
-            style: { color: "#000", borderColor: "#68d391" },
-          });
         }
       )
       .subscribe();
