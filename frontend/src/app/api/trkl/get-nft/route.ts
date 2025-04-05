@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
             ownsNFT: ownsNFT,
         })
     } catch (error: any) {
-        console.error('Minting failed:', error)
-        return NextResponse.json({ error: 'Minting failed', detail: error.message }, { status: 500 })
+        console.error('Get NFT failed:', error)
+        return NextResponse.json({ error: 'Get NFT', detail: error.message }, { status: 500 })
     }
 }
