@@ -2,7 +2,7 @@
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { FormEvent, useEffect, useState } from "react";
-import { MemoizedReactMarkdown } from "./rendering/markdown";
+import { MemoizedReactMarkdown } from "./rendering/common/markdown";
 import { useScrollAnchor } from "@/hooks/use-scroll-anchor";
 import {
   Select,
@@ -19,6 +19,12 @@ import DuneAnalytics from "./rendering/top-wallets";
 import ProfileData from "./rendering/profile-data";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { TokenAllocation } from "./rendering/token-allocation";
+import { TokenTransfers } from "./rendering/nodeit/token-transfers";
+import { ChainTokenTransfers } from "./rendering/nodeit/token-transfer-chain";
+import { DailyStats } from "./rendering/nodeit/daily-stats";
+import { TransactionStats } from "./rendering/nodeit/transaction-stats";
+import { TokenMetadata } from "./rendering/nodeit/token-metadata";
 
 interface ToolAnnotation {
   type: string;
@@ -218,7 +224,7 @@ export default function ChatComponent({
                       }));
                     }
                   } catch (e) {
-                    console.log("Error parsing annotation data:", e, line);
+                    console.log('Error parsing annotation data:', e, line);
                   }
                 } else if (line.startsWith("0:")) {
                   try {
@@ -229,7 +235,7 @@ export default function ChatComponent({
                       .replace(/\\n/g, "\n");
                     result += content;
                   } catch (e) {
-                    console.log("Error parsing content:", e, line);
+                    console.log('Error parsing content:', e, line);
                   }
                 } else if (line.startsWith("a:")) {
                   try {
@@ -256,13 +262,71 @@ export default function ChatComponent({
                         componentName: "DuneAnalytics",
                       });
                     } else if (toolResultJson.table) {
-                      console.log("Table result:", toolResultJson.table);
+                      console.log('Table result:', toolResultJson.table);
                       currentAnnotations.push({
-                        type: "tool-result",
+                        type: 'tool-result',
                         toolCallId: toolResultJson.toolCallId,
-                        status: "success",
+                        status: 'success',
                         data: toolResultJson.data,
-                        componentName: "ProfileData",
+                        componentName: 'ProfileData',
+                      })
+                    } else if (toolResultJson.type === 'allocation') {
+                      console.log('Token allocation result:', toolResultJson);
+                      currentAnnotations.push({
+                        type: 'tool-result',
+                        toolCallId: toolResultJson.toolCallId,
+                        status: 'success',
+                        data: toolResultJson,
+                        componentName: 'TokenAllocation',
+                      })
+                    } else if (toolResultJson.type === 'tool-result' && toolResultJson.componentName === 'TokenTransfers') {
+                      console.log('Token transfers result:', toolResultJson);
+                      currentAnnotations.push({
+                        type: 'tool-result',
+                        toolCallId: toolResultJson.toolCallId,
+                        status: toolResultJson.status,
+                        data: toolResultJson.data,
+                        componentName: 'TokenTransfers'
+                      });
+                    } else if (toolResultJson.type === 'tool-result' && toolResultJson.componentName === 'ContractTokenTransfers') {
+                      console.log('Token transfers result:', toolResultJson);
+                      currentAnnotations.push({
+                        type: 'tool-result',
+                        toolCallId: toolResultJson.toolCallId,
+                        status: toolResultJson.status,
+                        data: toolResultJson.data,
+                        chain: toolResultJson.data.metadata.network,
+                        componentName: 'ContractTokenTransfers'
+                      });
+                    } else if (toolResultJson.type === 'tool-result' && toolResultJson.componentName === 'DailyStats') {
+                      console.log('Daily stats result:', toolResultJson);
+                      currentAnnotations.push({
+                        type: 'tool-result',
+                        toolCallId: toolResultJson.toolCallId,
+                        status: toolResultJson.status,
+                        data: toolResultJson.data,
+                        chain: toolResultJson.data.metadata.network,
+                        componentName: 'DailyStats'
+                      });
+                    } else if (toolResultJson.type === 'tool-result' && toolResultJson.componentName === 'TransactionStats') {
+                      console.log('Transaction stats result:', toolResultJson);
+                      currentAnnotations.push({
+                        type: 'tool-result',
+                        toolCallId: toolResultJson.toolCallId,
+                        status: toolResultJson.status,
+                        data: toolResultJson.data,
+                        chain: toolResultJson.data.metadata.network,
+                        componentName: 'TransactionStats'
+                      });
+                    } else if (toolResultJson.type === 'tool-result' && toolResultJson.componentName === 'TokenMetadata') {
+                      console.log('Token metadata result:', toolResultJson);
+                      currentAnnotations.push({
+                        type: 'tool-result',
+                        toolCallId: toolResultJson.toolCallId,
+                        status: toolResultJson.status,
+                        data: toolResultJson.data,
+                        chain: toolResultJson.data.protocol,
+                        componentName: 'TokenMetadata'
                       });
                     }
                     setToolAnnotations((prev) => ({
@@ -270,7 +334,7 @@ export default function ChatComponent({
                       [assistantMessageId]: currentAnnotations,
                     }));
                   } catch (e) {
-                    console.log("Error parsing tool result:", e, line);
+                    console.log('Error parsing tool result:', e, line);
                   }
                 } else if (line.startsWith("e:")) {
                   break; // Exit the loop after receiving the error message
@@ -295,7 +359,7 @@ export default function ChatComponent({
         }
       }
     } catch (e) {
-      console.log("Chat error:", e);
+      console.log('Chat error:', e);
       const errorMessageId = `error-${Date.now()}`;
       setMessages([
         ...newMessages,
@@ -325,7 +389,19 @@ export default function ChatComponent({
         return <DuneAnalytics data={annotation.data} />;
       } else if (annotation.componentName === "ProfileData") {
         return <ProfileData data={annotation.data} />;
-      }
+      } else if (annotation.componentName === 'TokenAllocation') {
+        return <TokenAllocation data={annotation.data} onSendMessage={handleSendMessage} />;
+      } else if (annotation.componentName === 'TokenTransfers') {
+        return <TokenTransfers data={annotation.data} />;
+      } else if (annotation.componentName === 'ContractTokenTransfers') {
+        return <ChainTokenTransfers data={annotation.data} chain={annotation.chain} />;
+      } else if (annotation.componentName === 'DailyStats') {
+        return <DailyStats data={annotation.data} chain={annotation.chain} />;
+      } else if (annotation.componentName === 'TransactionStats') {
+        return <TransactionStats data={annotation.data} chain={annotation.chain} />;
+      } else if (annotation.componentName === 'TokenMetadata') {
+        return <TokenMetadata data={annotation.data} chain={annotation.chain} />;
+      } 
     }
 
     return null;
@@ -368,7 +444,7 @@ export default function ChatComponent({
         ref={containerRef}
       >
         <div
-          className="flex min-h-full flex-col gap-4 py-4 overflow-visible"
+          className="flex min-h-full mb-32 md:mb-0 flex-col gap-4 py-4 overflow-visible"
           ref={messagesRef}
         >
           {messages.length > 0 ? (
@@ -385,10 +461,7 @@ export default function ChatComponent({
                         {annotations
                           .filter((ann) => ann.type === "tool-result")
                           .map((annotation, idx) => (
-                            <div
-                              key={`tool-${m.id}-${idx}`}
-                              className="relative rounded-[30px]"
-                            >
+                            <div key={`tool-${m.id}-${idx}`} className="relative rounded-[30px] max-w-[80%]">
                               {renderToolComponent(annotation)}
                             </div>
                           ))}
@@ -491,7 +564,7 @@ function SendIcon(props: any) {
 
 const UserMessage = ({ message }: { message: Message }) => {
   return (
-    <div className="flex items-start gap-3 justify-end w-full">
+    <div className="flex items-start gap-3 justify-end w-ful max-w-[93%]">
       <div className="bg-primary rounded-lg p-3 max-w-[80%] text-primary-foreground break-words">
         <div className="text-sm whitespace-pre-wrap">{message.content}</div>
       </div>
@@ -505,7 +578,7 @@ const UserMessage = ({ message }: { message: Message }) => {
 
 const BotMessage = ({ message }: { message: Message }) => {
   return (
-    <div className="flex items-start gap-3 w-full">
+    <div className="flex items-start gap-3 w-full max-w-[93%]">
       <Avatar className="w-8 h-8 shrink-0">
         <AvatarImage src="/placeholder-user.jpg" />
         <AvatarFallback>BOT</AvatarFallback>

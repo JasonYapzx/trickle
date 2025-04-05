@@ -69,3 +69,24 @@ export async function checkEnv() {
     );
   }
 }
+
+
+export function formatAddress(address: string): string {
+  if (!address) return '';
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+export function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleString();
+}
+
+export function formatNumber(num: number): string {
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 4,
+    minimumFractionDigits: 0,
+  }).format(num);
+}
+
+export const get1InchUrl = (token: { symbol: string, contractAddress: string }) => {
+  return `https://app.1inch.io/#/1/simple/swap/1:${token.symbol}`;
+};

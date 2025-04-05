@@ -1,8 +1,8 @@
 import { FlagAccordion } from "./flag-table";
 import { IncompatibleBrowserAlert } from "./incompatible-alert";
-import { ExternalLink } from "../rendering/external-link";
+import { ExternalLink } from "../rendering/common/external-link";
 import { useState } from "react";
-import { CodeSnippet } from "../rendering/code-snippet";
+import { CodeSnippet } from "../rendering/common/code-snippet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export function Modal({

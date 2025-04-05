@@ -35,7 +35,6 @@ export async function POST(req: Request) {
     year: "numeric",
   }).format(now);
   const { messages, toolDefaults = {} } = await req.json();
-  console.log(messages);
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   const google = createGoogleGenerativeAI({
     apiKey: apiKey,
@@ -59,9 +58,10 @@ export async function POST(req: Request) {
 
   const defaultsContext = [
     chain && `Chain to use: ${chain}`,
-    walletAddress && `Wallet address to use: ${walletAddress}`,
+    walletAddress && `User's Wallet address to use: ${walletAddress}`,
     queryId && `Default Dune query ID: ${queryId}`,
-    `and User ID: ${userId}`,
+    `and User ID: ${userId} \n\n
+    and Protocol to use: ethereum \n Network to use: mainnet`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
   const data = new StreamData();
 
   const result = streamText({
-    model: openai("gpt-4o"),
+    model: google('gemini-2.0-flash-lite-preview-02-05'),
     system: `${
       defaultsContext
         ? `User's details:\n${defaultsContext}
@@ -199,11 +199,309 @@ export async function POST(req: Request) {
     messages,
     maxSteps: 5,
     tools: {
-      getTokenTransfersByAccount,
-      getTokenTransfersByContract,
-      getDailyActiveAccountStatsByContract,
-      getDailyTransactionsStatsByContract,
-      getTokenContractMetadataByContracts,
+      getTokenTransfersByAccount: tool({
+        description: "Get token transfers by account",
+        parameters: z.object({
+          accountAddress: z.string().describe("The wallet address to query transfers for"),
+          protocol: z.string().describe("The blockchain protocol"),
+          network: z.string().describe("The network name"),
+          fromDate: z.string().describe("Start date in ISO format"),
+          toDate: z.string().describe("End date in ISO format")
+        }),
+        execute: async (params, { toolCallId }) => {
+          data.appendMessageAnnotation({
+            type: "tool-status",
+            toolCallId,
+            status: "in-progress",
+          });
+
+          try {
+            const result = await getTokenTransfersByAccount.execute(params, { toolCallId, messages });
+            console.log(result)
+
+            const formattedData = {
+              type: 'tool-result',
+              toolCallId,
+              status: 'success',
+              componentName: 'TokenTransfers',
+              data: {
+                transfers: result,
+                metadata: {
+                  account: params.accountAddress,
+                  protocol: params.protocol,
+                  network: params.network,
+                  timeRange: {
+                    from: params.fromDate,
+                    to: params.toDate
+                  }
+                }
+              }
+            };
+
+            data.appendMessageAnnotation({
+              type: "tool-status",
+              toolCallId,
+              status: "completed"
+            });
+
+            return JSON.stringify(formattedData);
+          } catch (error) {
+            console.error("Token transfers error:", error);
+            data.appendMessageAnnotation({
+              type: "tool-status",
+              toolCallId,
+              status: "error"
+            });
+            return `a:`+ JSON.stringify({
+              type: 'tool-result',
+              toolCallId,
+              status: 'error',
+              error: "Failed to fetch token transfers",
+              details: error instanceof Error ? error.message : "Unknown error"
+            });
+          }
+        }
+      }),
+      getTokenTransfersByContract: tool({
+        description: "Get token transfers by contract",
+        parameters: z.object({
+          contractAddress: z.string().describe("The contract address to query transfers for"),
+          protocol: z.string().describe("The blockchain protocol"),
+          network: z.string().describe("The network name"),
+          fromDate: z.string().describe("Start date in ISO format"),
+          toDate: z.string().describe("End date in ISO format")
+        }),
+        execute: async (params, { toolCallId }) => {
+          data.appendMessageAnnotation({
+            type: "tool-status",
+            toolCallId,
+            status: "in-progress",
+          });
+
+          try {
+            const result = await getTokenTransfersByContract.execute(params, { toolCallId, messages });
+
+            const formattedData = {
+              type: 'tool-result',
+              toolCallId,
+              status: 'success',
+              componentName: 'ContractTokenTransfers',
+              data: {
+                transfers: result,
+                metadata: {
+                  account: params.contractAddress,
+                  protocol: params.protocol,
+                  network: params.network,
+                  timeRange: {
+                    from: params.fromDate,
+                    to: params.toDate
+                  }
+                }
+              }
+            };
+
+            data.appendMessageAnnotation({
+              type: "tool-status",
+              toolCallId,
+              status: "completed"
+            });
+
+            return JSON.stringify(formattedData);
+          } catch (error) {
+            console.error("Token transfers error:", error);
+            data.appendMessageAnnotation({
+              type: "tool-status",
+              toolCallId,
+              status: "error"
+            });
+            return JSON.stringify({
+              type: 'tool-result',
+              toolCallId,
+              status: 'error',
+              error: "Failed to fetch token transfers",
+              details: error instanceof Error ? error.message : "Unknown error"
+            });
+          }
+        }
+      }),
+      getDailyActiveAccountStatsByContract: tool({
+        description: "Get daily active account statistics for a token contract",
+        parameters: z.object({
+          contractAddress: z.string().describe("The contract address to query stats for"),
+          protocol: z.string().describe("The blockchain protocol"),
+          network: z.string().describe("The network name"),
+          startDate: z.string().describe("Start date in YYYY-MM-DD format"),
+          endDate: z.string().describe("End date in YYYY-MM-DD format")
+        }),
+        execute: async (params, { toolCallId }) => {
+          data.appendMessageAnnotation({
+            type: "tool-status",
+            toolCallId,
+            status: "in-progress",
+          });
+
+          try {
+            const result = await getDailyActiveAccountStatsByContract.execute(params, { toolCallId, messages });
+
+            const formattedData = {
+              type: 'tool-result',
+              toolCallId,
+              status: 'success',
+              componentName: 'DailyStats',
+              data: {
+                stats: result,
+                metadata: {
+                  contract: params.contractAddress,
+                  protocol: params.protocol,
+                  network: params.network,
+                  timeRange: {
+                    from: params.startDate,
+                    to: params.endDate
+                  }
+                }
+              }
+            };
+
+            data.appendMessageAnnotation({
+              type: "tool-status",
+              toolCallId,
+              status: "completed"
+            });
+
+            return JSON.stringify(formattedData);
+          } catch (error) {
+            console.error("Daily stats error:", error);
+            data.appendMessageAnnotation({
+              type: "tool-status",
+              toolCallId,
+              status: "error"
+            });
+            return JSON.stringify({
+              type: 'tool-result',
+              toolCallId,
+              status: 'error',
+              error: "Failed to fetch daily active account stats",
+              details: error instanceof Error ? error.message : "Unknown error"
+            });
+          }
+        }
+      }),
+      getDailyTransactionsStatsByContract: tool({
+        description: "Get daily transaction statistics for a token contract",
+        parameters: z.object({
+          contractAddress: z.string().describe("The contract address to query stats for"),
+          protocol: z.string().describe("The blockchain protocol"),
+          network: z.string().describe("The network name"),
+          startDate: z.string().describe("Start date in YYYY-MM-DD format"),
+          endDate: z.string().describe("End date in YYYY-MM-DD format"),
+        }),
+        execute: async (params, { toolCallId }) => {
+          data.appendMessageAnnotation({
+            type: "tool-status",
+            toolCallId,
+            status: "in-progress",
+          });
+
+          try {
+            const result = await getDailyTransactionsStatsByContract.execute(params, { toolCallId, messages });
+
+            const formattedData = {
+              type: 'tool-result',
+              toolCallId,
+              status: 'success',
+              componentName: 'TransactionStats',
+              data: {
+                stats: result,
+                metadata: {
+                  contract: params.contractAddress,
+                  protocol: params.protocol,
+                  network: params.network,
+                  timeRange: {
+                    from: params.startDate,
+                    to: params.endDate
+                  }
+                }
+              }
+            };
+
+            data.appendMessageAnnotation({
+              type: "tool-status",
+              toolCallId,
+              status: "completed"
+            });
+
+            return JSON.stringify(formattedData);
+          } catch (error) {
+            console.error("Transaction stats error:", error);
+            data.appendMessageAnnotation({
+              type: "tool-status",
+              toolCallId,
+              status: "error"
+            });
+            return JSON.stringify({
+              type: 'tool-result',
+              toolCallId,
+              status: 'error',
+              error: "Failed to fetch daily transaction stats",
+              details: error instanceof Error ? error.message : "Unknown error"
+            });
+          }
+        }
+      }),
+      getTokenContractMetadataByContracts: tool({
+        description: "Get metadata for token contracts",
+        parameters: z.object({
+          contractAddresses: z.array(z.string()).describe("Array of contract addresses to query metadata for"),
+          protocol: z.string().describe("The blockchain protocol"),
+          network: z.string().describe("The network name")
+        }),
+        execute: async (params, { toolCallId }) => {
+          data.appendMessageAnnotation({
+            type: "tool-status",
+            toolCallId,
+            status: "in-progress",
+          });
+
+          try {
+            const result = await getTokenContractMetadataByContracts.execute(params, { toolCallId, messages });
+
+            const formattedData = {
+              type: 'tool-result',
+              toolCallId,
+              status: 'success',
+              componentName: 'TokenMetadata',
+              data: {
+                metadata: result,
+                protocol: params.protocol,
+                network: params.network,
+                contracts: params.contractAddresses
+              }
+            };
+
+            data.appendMessageAnnotation({
+              type: "tool-status",
+              toolCallId,
+              status: "completed"
+            });
+
+            return JSON.stringify(formattedData);
+          } catch (error) {
+            console.error("Token metadata error:", error);
+            data.appendMessageAnnotation({
+              type: "tool-status",
+              toolCallId,
+              status: "error"
+            });
+            return JSON.stringify({
+              type: 'tool-result',
+              toolCallId,
+              status: 'error',
+              error: "Failed to fetch token metadata",
+              details: error instanceof Error ? error.message : "Unknown error"
+            });
+          }
+        }
+      }),
       getTokenHoldersByContract,
       getTokenPricesByContract,
       listTransactions: tool({
@@ -474,8 +772,131 @@ export async function POST(req: Request) {
                   : "Unknown error occurred",
             });
           }
-        },
+        }
       }),
+      tokenAllocation: tool({
+        description: 'Get the intended token allocation for a given user. Use this for questions like "what is my token allocation" or "what is my portfolio". They can modify the parameters to get a different allocation',
+        parameters: z.object({
+          action: z.enum(['get', 'update']).describe('Action to perform on token allocation'),
+          email: z.string().optional().describe('User email to query/update allocation for'),
+          updates: z.array(z.object({
+            token: z.string(),
+            tokenAddress: z.string(),
+            proportion: z.number().min(0).max(1)
+          })).optional().describe('New allocation proportions when updating (0.0 to 1.0)')
+        }),
+        execute: async (params, { toolCallId }) => {
+          data.appendMessageAnnotation({
+            type: 'tool-status',
+            toolCallId,
+            status: 'in-progress'
+          });
+
+          try {
+            const supabase = createClient();
+            const userEmail = params.email || toolDefaults.email;
+
+            if (params.action === 'get') {
+              const { data: portfolio, error } = await supabase
+                .from('portfolio')
+                .select('*')
+                .eq('user', userEmail);
+
+              if (error) throw error;
+
+              const formattedResults = {
+                type: 'allocation',
+                portfolio: portfolio.map(item => ({
+                  token: item.token,
+                  tokenAddress: item.tokenAddress,
+                  proportion: item.proportion // Convert percentage to decimal
+                }))
+              };
+
+              // Mark as completed
+              data.appendMessageAnnotation({
+                type: 'tool-status',
+                toolCallId,
+                status: 'completed'
+              });
+
+              // Add custom render annotation
+              data.appendMessageAnnotation({
+                type: 'custom-render',
+                toolCallId,
+                componentName: 'TokenAllocation',
+                data: formattedResults
+              });
+
+              return JSON.stringify(formattedResults);
+
+            } else if (params.action === 'update' && params.updates) {
+              // Validate total proportion equals 1.0
+              const totalProportion = params.updates.reduce((sum, item) => sum + item.proportion, 0);
+              if (Math.abs(totalProportion - 1.0) > 0.0001) { // Allow small floating point differences
+                throw new Error('Total allocation must equal 1.0');
+              }
+
+              // Delete existing allocations
+              await supabase
+                .from('portfolio')
+                .delete()
+                .eq('user', userEmail);
+
+              const { data: newPortfolio, error } = await supabase
+                .from('portfolio')
+                .insert(
+                  params.updates.map(item => ({
+                    user: userEmail,
+                    token: item.token,
+                    tokenAddress: item.tokenAddress,
+                    proportion: item.proportion
+                  }))
+                )
+                .select();
+
+              if (error) throw error;
+
+              const formattedResults = {
+                type: 'allocation',
+                message: 'Portfolio updated successfully',
+                portfolio: newPortfolio.map(item => ({
+                  token: item.token,
+                  tokenAddress: item.tokenAddress,
+                  proportion: parseFloat((item.proportion).toFixed(4)) // Convert back to decimal
+                }))
+              };
+
+              data.appendMessageAnnotation({
+                type: 'tool-status',
+                toolCallId,
+                status: 'completed'
+              });
+
+              data.appendMessageAnnotation({
+                type: 'custom-render',
+                toolCallId,
+                componentName: 'TokenAllocation',
+                data: formattedResults
+              });
+
+              return JSON.stringify(formattedResults);
+            }
+          } catch (error) {
+            console.error('Token allocation error:', error);
+            data.appendMessageAnnotation({
+              type: 'tool-status',
+              toolCallId,
+              status: 'error'
+            });
+
+            return JSON.stringify({
+              error: 'Failed to manage token allocation',
+              details: error instanceof Error ? error.message : 'Unknown error occurred'
+            });
+          }
+        }
+      })
     },
     onFinish() {
       data.close();

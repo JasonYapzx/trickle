@@ -195,6 +195,7 @@ export const getDailyTransactionsStatsByContract = tool({
         endDate,
       }),
     };
+
     const response = await fetch(url, options);
     const data = await response.json();
     console.log(data);
@@ -237,7 +238,7 @@ export const getTokenHoldersByContract = tool({
     contractAddress: z.string(),
   }),
   execute: async ({ contractAddress, protocol, network }) => {
-    console.log("getTokenHoldersByContract");
+    console.log("getTokenHoldersByContract", contractAddress, protocol, network);
     const url = `https://web3.nodit.io/v1/${protocol}/${network}/token/getTokenHoldersByContract`;
     const options = {
       method: "POST",
