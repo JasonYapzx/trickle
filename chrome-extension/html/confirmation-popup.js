@@ -106,25 +106,27 @@ document
       },
     ]);
 
-    // call api
-    // fetch()
-    fetch("https://api.example.com/investments", {
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    const raw = JSON.stringify({
+      amount: investmentAmountInCents,
+      address: "0x9369d176081C548c9E72997e61A03E0e6DB94697",
+    });
+
+    const requestOptions = {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        amount: investmentAmountInCents,
-        description: domainName,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Success:", data);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow",
+    };
+
+    const data = await fetch(
+      "https://trickle-kappa.vercel.app/api/ext-call",
+      requestOptions
+    );
+    const dataJson = await data.json();
+    console.log(dataJson);
 
     // Close the window
     window.close();

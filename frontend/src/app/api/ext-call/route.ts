@@ -15,6 +15,7 @@ export async function POST(req: Request) {
     // Parse the request body
     const body = await req.json();
     const { address, amount } = body;
+    console.log("Received request body:", body);
 
     // Validate inputs
     if (!address || !amount) {
