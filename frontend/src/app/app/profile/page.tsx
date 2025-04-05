@@ -197,7 +197,7 @@ export default function ProfilePage() {
             <div className="flex flex-col md:flex-row items-start md:items-center md:justify-around gap-4 items-center">
               {/* Balance Display */}
               <div className="flex flex-col items-end">
-                <div className="bg-[#dcf797] text-black text-4xl font-bold px-6 py-4 rounded-lg shadow-sm border border-black text-center min-w-[100px]">
+                <div className="bg-[#dcf797] text-black text-4xl font-bold px-6 py-4 rounded-lg shadow-sm border border-black text-center min-w-[150px]">
                   {trklBalance ?? "0.0"}
                 </div>
                 <span className="text-sm font-semibold text-muted-foreground mt-1 pr-1">
