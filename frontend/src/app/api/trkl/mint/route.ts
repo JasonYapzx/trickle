@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
         const { userAddress, amount } = body
 
         const response = await axios.post(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/api/trkl/mint?address=${userAddress}`,
+            `https://trickle-kappa.vercel.app/api/trkl/mint?address=${userAddress}`,
             {
                 userAddress: userAddress,
             },
