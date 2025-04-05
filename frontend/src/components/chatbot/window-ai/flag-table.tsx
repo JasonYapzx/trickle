@@ -4,8 +4,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ExternalLink } from "../rendering/external-link";
-import { CodeSnippet } from "../rendering/code-snippet";
+import { ExternalLink } from "../rendering/common/external-link";
+import { CodeSnippet } from "../rendering/common/code-snippet";
 
 interface FlagAccordionProps {
   value: string | undefined;

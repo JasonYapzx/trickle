@@ -1,7 +1,7 @@
 import { AlertCircle } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ExternalLink } from "../rendering/external-link";
+import { ExternalLink } from "../rendering/common/external-link";
 
 export function IncompatibleBrowserAlert({
   error,
