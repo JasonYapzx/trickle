@@ -23,20 +23,6 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-    console.log("Making API call with:", {
-      url: `${MULTIBAAS_URL}/chains/ethereum/addresses/${CONTRACT_ADDRESS}/contracts/${CONTRACT_LABEL}/methods/${FUNCTION_NAME}`,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer MULTIBAAS_API_KEY`,
-      },
-      data: {
-        args: [address, amount.toString()],
-        from: address,
-        value: "0",
-        signAndSubmit: true,
-      },
-    });
-
     // First, get the transaction data from the contract method
     const methodResponse = await axios.post(
       `${MULTIBAAS_URL}/chains/ethereum/addresses/${CONTRACT_ADDRESS}/contracts/${CONTRACT_LABEL}/methods/${FUNCTION_NAME}`,
