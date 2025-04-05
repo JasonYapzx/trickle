@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/providers/auth-provider";
-import { Toaster } from "sonner";
 import { WebhookListener } from "@/components/webhook-listener";
+import { Toaster } from "@/components/ui/sonner";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -30,8 +30,8 @@ export default function RootLayout({
         <AuthProvider>
           {children}
           <WebhookListener />
-          <Toaster />
         </AuthProvider>
+        <Toaster />
       </body>
     </html>
   );
