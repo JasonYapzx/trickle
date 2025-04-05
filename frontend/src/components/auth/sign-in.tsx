@@ -37,7 +37,7 @@ export const SignIn = () => {
       onClick={() => signIn("worldcoin")}
     >
       <LogIn className="h-4 w-4" />
-      <span>Sign in with Worldcoin</span>
+      <span className="hidden md:flex">Sign in with Worldcoin</span>
     </Button>
   );
 };

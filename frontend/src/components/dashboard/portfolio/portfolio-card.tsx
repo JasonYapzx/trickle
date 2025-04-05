@@ -112,7 +112,7 @@ export const PortfolioCard = ({
   }, [address, chain_id, timerange]);
 
   return (
-    <Card className="col-span-full lg:col-span-2">
+    <Card className="col-span-full bg-[#F3F3F3] lg:col-span-2 max-w-md lg:max-w-7xl">
       <CardHeader>
         <CardTitle>Portfolio Overview</CardTitle>
         <CardDescription>
