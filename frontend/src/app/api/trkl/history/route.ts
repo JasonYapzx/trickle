@@ -17,14 +17,19 @@ export async function GET(request: NextRequest) {
         const contract = new ethers.Contract(process.env.TRKL_CONTRACT_ADDRESS!, TRKL_ABI, provider)
 
         // Create filter for Transfer events (incoming + outgoing)
-        const sentFilter = contract.filters.Transfer(walletAddress, null)
-        const receivedFilter = contract.filters.Transfer(null, walletAddress)
+        const sentFilter = contract.filters.Transfer(walletAddress, null);
+        const receivedFilter = contract.filters.Transfer(null, walletAddress);
 
-        const [sentEvents, receivedEvents] = await Promise.all([
+        // Query and cast to EventLog[]
+        const [sentEventsRaw, receivedEventsRaw] = await Promise.all([
             contract.queryFilter(sentFilter),
             contract.queryFilter(receivedFilter),
-        ])
+        ]);
 
+        const sentEvents = sentEventsRaw as ethers.EventLog[];
+        const receivedEvents = receivedEventsRaw as ethers.EventLog[];
+
+        // Format each event with timestamp
         const formatTx = async (e: ethers.EventLog) => {
             const block = await provider.getBlock(e.blockNumber);
             return {
@@ -33,8 +38,11 @@ export async function GET(request: NextRequest) {
                 from: e.args?.from,
                 to: e.args?.to,
                 amount: ethers.formatUnits(e.args?.value, 18),
-                direction: e.args?.from.toLowerCase() === walletAddress.toLowerCase() ? 'out' : 'in',
-                timestamp: block.timestamp // UNIX
+                direction:
+                    e.args?.from.toLowerCase() === walletAddress.toLowerCase()
+                        ? "out"
+                        : "in",
+                timestamp: block.timestamp,
             };
         };
 
