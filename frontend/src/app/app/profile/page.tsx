@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase";
 import { formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 interface User {
   name: string;
@@ -39,6 +40,7 @@ export default function ProfilePage() {
       timestamp: number;
     }[]
   >([]);
+  const [hasNFT, setHasNFT] = useState<boolean>(false);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -93,15 +95,22 @@ export default function ProfilePage() {
     }
   };
 
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      await getUser();
-      await getPortfolio();
-      setLoading(false);
+  const hasTRKLNFT = async (walletAddress: string) => {
+    try {
+      const res = await fetch(`/api/trkl/get-nft?address=${walletAddress}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await res.json();
+      if (data.ownsNFT) {
+        setHasNFT(true);
+      }
+    } catch (err) {
+      console.error("Failed to fetch TRKL balance", err);
+      setTrklBalance("0");
     }
-    fetchData();
-  }, []);
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -120,6 +129,7 @@ export default function ProfilePage() {
       setIsLoading(true);
       await getTRKLBalance(user.walletAddress);
       await getTRKLHistory(user.walletAddress);
+      await hasTRKLNFT(user.walletAddress)
       setIsLoading(false);
     }
     fetchTRKL();
@@ -173,6 +183,8 @@ export default function ProfilePage() {
       <Card className="mt-6">
         <CardHeader>
           <CardTitle>TRKL Loyalty Tokens</CardTitle>
+          {hasNFT ? <Image src="/nft-real.png" alt="nftbadge" width={100} height={100}/> : <></>}
+          {hasNFT ? <div>TRKL Multiplier: x1.5</div> : <></>}
           <CardDescription>Your current balance of TRKL</CardDescription>
         </CardHeader>
         <CardContent>
