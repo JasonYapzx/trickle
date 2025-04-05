@@ -3,6 +3,8 @@ import { parseEther } from "ethers";
 import { NextResponse } from "next/server";
 import axios from "axios";
 
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   const body = await request.json();
   console.log("Received request body:", body);
