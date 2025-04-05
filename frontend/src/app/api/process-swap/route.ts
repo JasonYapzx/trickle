@@ -1,121 +1,13 @@
-import { NextResponse } from "next/server";
-import axios from "axios";
 import { createClient } from "@/lib/supabase";
 import { parseEther } from "ethers";
-/* eslint-disable @typescript-eslint/no-explicit-any */
-interface SwapRequest {
-  walletAddress: string;
-  amount: string; // Total amount to distribute according to portfolio proportions
-}
+import { NextResponse } from "next/server";
+import axios from "axios";
 
-interface EventData {
-  id: string;
-  event: string;
-  data: {
-    triggeredAt: string;
-    event: {
-      name: string;
-      signature: string;
-      inputs: Array<{
-        name: string;
-        value: string;
-        hashed: boolean;
-        type: string;
-      }>;
-      // Other event properties
-    };
-    // Other data properties
-  };
-}
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
-  try {
-    console.log("Received webhook request at:", new Date().toISOString());
-    // Check if this is a webhook event from MultiBaas
-    const contentType = request.headers.get("content-type") || "";
-
-    if (contentType.includes("application/json")) {
-      const rawData = await request.json();
-      console.log("Webhook data ID:", rawData[0]?.id);
-      // Check if it's an array of events
-      // if (Array.isArray(rawData)) {
-      // Find the BatchReady event
-      const batchReadyEvent = rawData.find(
-        (event: EventData) =>
-          event.event === "event.emitted" &&
-          event.data?.event?.name === "BatchReady"
-      );
-
-      if (batchReadyEvent) {
-        console.log("BatchReady event found:", batchReadyEvent);
-
-        // Extract the totalAmount from the BatchReady event
-        const totalAmount = batchReadyEvent.data.event.inputs.find(
-          (input) => input.name === "totalAmount"
-        )?.value;
-
-        if (totalAmount) {
-          // Get the wallet address from the transaction data
-          const walletAddress = batchReadyEvent.data.transaction?.from;
-
-          if (walletAddress) {
-            // Get ETH price from CoinGecko API
-            try {
-              // Process the swap with the extracted data
-              processSwap({
-                walletAddress,
-                amount: totalAmount,
-              });
-
-              fetch("https://trickle-kappa.vercel.app/api/process-swap", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  walletAddress,
-                  amount: totalAmount,
-                }),
-              });
-
-              return NextResponse.json(
-                { success: true, message: "Swap initiated" },
-                { status: 200 }
-              );
-            } catch (error) {
-              console.error("Error fetching ETH price:", error);
-              return NextResponse.json(
-                { error: "Failed to fetch ETH price for conversion" },
-                { status: 200 }
-              );
-            }
-          }
-        }
-      }
-    }
-
-    return NextResponse.json(
-      { error: "Invalid content type" },
-      { status: 200 }
-    );
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: "Internal server error", details: error.message },
-      { status: 200 }
-    );
-  }
-}
-
-// Function to pad an Ethereum address with zeros to make it bytes32 compatible
-function padAddressToBytes32(address: string): string {
-  // Remove '0x' if present, pad with 24 zeros (12 bytes), then add '0x' back
-  return address.startsWith("0x")
-    ? `0x${address.slice(2)}${"0".repeat(24)}`
-    : `0x${address}${"0".repeat(24)}`;
-}
-
-// Separate the swap processing logic into its own function
-async function processSwap(body: SwapRequest) {
+  const body = await request.json();
+  console.log("Received request body:", body);
   const { walletAddress, amount } = body;
   const multibaasUrl = process.env.NEXT_PUBLIC_BASE_MULTIBAAS_URL;
   const multibaasApiKey = process.env.NEXT_PUBLIC_BASE_MULTIBAAS_API;
