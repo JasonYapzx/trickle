@@ -102,8 +102,8 @@ export default function Hero() {
               <path d="M22 22C23.1046 22 24 21.1046 24 20V12.6569C24 12.2107 23.7893 11.7893 23.4142 11.4142L18.7071 6.70711C18.3166 6.31658 17.6834 6.31658 17.2929 6.70711L8.70711 15.2929C8.31658 15.6834 8.31658 16.3166 8.70711 16.7071L13.4142 21.4142C13.7893 21.7893 14.2107 22 14.6569 22H22Z" fill="currentColor"/>
             </svg>
           </div>
-          <nav className="flex gap-3 text-sm">
-            <a href="/app" className="hover:opacity-70 transition-opacity">Dashboard</a>
+          <nav className="flex gap-3 text-sm items-center">
+            {/* <a href="/app" className="hover:opacity-70 transition-opacity">Dashboard</a> */}
             <SignIn />
           </nav>
         </div>

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { NavigationItems } from "@/components/nav-items";
+import { SignIn } from "@/components/auth/sign-in";
 
 
 export const metadata: Metadata = {
@@ -40,6 +41,7 @@ export default function RootLayout({
                 <SidebarGroupContent>
                   <SidebarMenu className="space-y-3">
                     <NavigationItems />
+                    <SignIn />
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
