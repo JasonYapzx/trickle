@@ -61,25 +61,10 @@ export async function POST(request: Request) {
           if (walletAddress) {
             // Get ETH price from CoinGecko API
             try {
-              const priceResponse = await axios.get(
-                "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
-              );
-
-              const ethPrice = priceResponse.data.ethereum.usd;
-              // Convert cents to dollars
-              const valueInDollars = Number(totalAmount) / 100;
-
-              // Calculate ETH amount: value in dollars / price of ETH
-              const amountInEth = (valueInDollars / ethPrice).toFixed(18);
-
-              console.log(
-                `Converting $${valueInDollars} (${totalAmount} cents) to ${amountInEth} ETH`
-              );
-
               // Process the swap with the extracted data
               processSwap({
                 walletAddress,
-                amount: amountInEth,
+                amount: totalAmount,
               });
               return NextResponse.json(
                 { success: true, message: "Swap initiated" },
@@ -109,11 +94,23 @@ export async function POST(request: Request) {
   }
 }
 
+// Function to pad an Ethereum address with zeros to make it bytes32 compatible
+function padAddressToBytes32(address: string): string {
+  // Remove '0x' if present, pad with 24 zeros (12 bytes), then add '0x' back
+  return address.startsWith("0x")
+    ? `0x${address.slice(2)}${"0".repeat(24)}`
+    : `0x${address}${"0".repeat(24)}`;
+}
+
 // Separate the swap processing logic into its own function
 async function processSwap(body: SwapRequest) {
   const { walletAddress, amount } = body;
   const multibaasUrl = process.env.NEXT_PUBLIC_BASE_MULTIBAAS_URL;
   const multibaasApiKey = process.env.NEXT_PUBLIC_BASE_MULTIBAAS_API;
+  const CONTRACT_ADDRESS =
+    process.env.NEXT_PUBLIC_BASE_MULTIBAAS_CONTRACT_ADDRESS || "";
+  const CONTRACT_LABEL =
+    process.env.NEXT_PUBLIC_BASE_MULTIBAAS_CONTRACT_LABEL || "";
 
   if (!multibaasUrl || !multibaasApiKey) {
     return NextResponse.json(
@@ -129,8 +126,19 @@ async function processSwap(body: SwapRequest) {
     );
   }
 
+  const ethPrice = 1807;
+  // Convert cents to dollars
+  const valueInDollars = Number(amount) / 100;
+
+  // Calculate ETH amount: value in dollars / price of ETH
+  const amountInEth = (valueInDollars / ethPrice).toFixed(18);
+
+  console.log(
+    `Converting $${valueInDollars} (${amount} cents) to ${amountInEth} ETH`
+  );
+
   // Convert amount to wei
-  const amountInWei = parseEther(amount.toString()).toString();
+  const amountInWei = parseEther(amountInEth.toString()).toString();
 
   // Initialize Supabase client
   const supabase = createClient();
@@ -168,21 +176,13 @@ async function processSwap(body: SwapRequest) {
     const swapAmount = BigInt(
       Math.floor(Number(amountInWei) * allocation.proportion)
     );
-
     try {
       // Add delay between requests
-      if (swapResults.length > 0) {
-        await delay(5000); // 3 seconds delay between swaps
-      }
+      await delay(3000); // 3 seconds delay between swaps
 
       const baseUrl =
         process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-      console.log("Making swap request with params:", {
-        baseUrl,
-        tokenAddress: allocation.tokenAddress,
-        amount: swapAmount.toString(),
-        walletAddress,
-      });
+      console.log("Making swap request with params:");
       const swapResponse = await axios.get(`${baseUrl}/api/1inch/swap`, {
         params: {
           src: nativeToken,
@@ -227,16 +227,33 @@ async function processSwap(body: SwapRequest) {
           amount: swapAmount.toString(),
           txHash: txResponse.data.txHash || txResponse.data.hash,
         });
+      console.log("run emit evenet");
+      console.log(
+        "args for submit and sign event emit",
+        String(Math.ceil(allocation.proportion * Number(amount)))
+      );
+      console.log(allocation.token, "token allocation");
+      await delay(3000)
+      const emitSwapEvent = await axios.post(
+        `${multibaasUrl}/chains/ethereum/addresses/${CONTRACT_ADDRESS}/contracts/${CONTRACT_LABEL}/methods/recordSwap`,
+        {
+          args: [String(Math.ceil(allocation.proportion * Number(amount))), allocation.token],
+          from: walletAddress,
+          value: "0",
+          signAndSubmit: true,
+          nonceManagement: true
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${multibaasApiKey}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log(`emit swap event data:`, emitSwapEvent.data);
       }
     } catch (error: any) {
-      console.error(`Swap error for ${allocation.token}:`, {
-        error: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        url: error.config?.url,
-        params: error.config?.params,
-      });
+      console.log("erorr here", error.response);
       swapResults.push({
         token: allocation.token,
         type: "error",
