@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "../globals.css";
 
+import Image from "next/image";
+
 import {
   Sidebar,
   SidebarProvider,
@@ -30,7 +32,7 @@ export default function RootLayout({
       <SidebarProvider>
         <div className="relative flex w-full">
           <Sidebar>
-            <SidebarGroupLabel className="pt-8 pb-24 md:flex hidden">
+            <SidebarGroupLabel className="pt-8 pb-24 md:flex hidden text-[#728f00]">
               Trickle
             </SidebarGroupLabel>
             <SidebarContent>
