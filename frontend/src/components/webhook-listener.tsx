@@ -126,9 +126,13 @@ export function WebhookListener() {
             });
             toast.success(`Transaction Confirmed`, {
               id: `tx-${txHash}`, // Add unique ID to prevent duplicates
-              description: `Tx ${txHash.substring(0, 6)}...${txHash.substring(
-                txHash.length - 4
-              )} has been confirmed`,
+              description: (
+                <div className="text-black">
+                  Tx {txHash.substring(0, 6)}...{txHash.substring(
+                    txHash.length - 4
+                  )} has been confirmed
+                </div>
+              ),
               icon: "✅",
               action: txHash
                 ? {
@@ -141,12 +145,12 @@ export function WebhookListener() {
                   }
                 : undefined,
               duration: 8000,
-              className: "transaction-toast",
-              style: { backgroundColor: "#f0fff4", borderColor: "#68d391" },
+              style: { color: "#000", borderColor: "#68d391" },
+              // className: "transaction-toast",
             });
           } else if (status === "failed") {
             toast.error(`Transaction Failed`, {
-              description: `${eventType} transaction could not be completed`,
+              description: (<div className="text-black">`{eventType} transaction could not be completed`</div>),
               icon: "❌",
               action: txHash
                 ? {
@@ -163,10 +167,10 @@ export function WebhookListener() {
           } else {
             toast.info(`New ${eventType}`, {
               description: txHash
-                ? `Transaction ${txHash.substring(0, 6)}...${txHash.substring(
+                ? (<div>Transaction ${txHash.substring(0, 6)}...${txHash.substring(
                     txHash.length - 4
-                  )} is processing`
-                : "New blockchain event received",
+                  )} is processing</div>)
+                : (<div className="text-black">New blockchain event received</div>),
               icon: "🔄",
               action: txHash
                 ? {
@@ -179,6 +183,12 @@ export function WebhookListener() {
                   }
                 : undefined,
               duration: 5000,
+              style: {
+                backgroundColor: "#ffffff",
+                color: "#000000",
+                fontWeight: "500",
+                borderColor: "#68d391",
+              },
             });
           }
 
