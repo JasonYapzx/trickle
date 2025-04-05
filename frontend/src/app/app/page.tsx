@@ -35,6 +35,7 @@ export default function Dashboard() {
   const [selectedChain, setSelectedChain] = useState<string>("Base");
   const [loading, setLoading] = useState(false);
   const supaBase = createClient();
+  const [transactionTypes, setTransactionTypes] = useState<string[]>([]);
 
   const chains = [
     { name: "Base", id: "8453" },
@@ -163,22 +164,41 @@ export default function Dashboard() {
               >
                 <TabsList className="mb-4 outline-none border-none w-full overflow-x-auto items-start justify-start flex whitespace-nowrap">
                   <TabsTrigger value="All">All</TabsTrigger>
-                  <TabsTrigger value="Send">Sent</TabsTrigger>
+                  {transactionTypes &&
+                    transactionTypes.map((txType, index) => (
+                      <TabsTrigger value={txType} key={index}>
+                        {txType}
+                      </TabsTrigger>
+                    ))}
+                  {/* <TabsTrigger value="Send">Sent</TabsTrigger>
                   <TabsTrigger value="Receive">Received</TabsTrigger>
                   <TabsTrigger value="Transfer">Transfers</TabsTrigger>
+                  <TabsTrigger value="Approve">Approve</TabsTrigger>
+                  <TabsTrigger value="SwapExactInput">
+                    SwapExactInput
+                  </TabsTrigger> */}
                 </TabsList>
 
                 {/* All tabs show the same content, just filtered by state */}
-                <TabsContent value="All" />
+                {transactionTypes &&
+                  transactionTypes.map((txType, index) => (
+                    <TabsContent value={txType} key={index}>
+                      {txType}
+                    </TabsContent>
+                  ))}
+                {/* <TabsContent value="All" />
                 <TabsContent value="Send" />
                 <TabsContent value="Receive" />
                 <TabsContent value="Transfer" />
+                <TabsContent value="Approve" />
+                <TabsContent value="SwapExactInput" /> */}
               </Tabs>
 
               {/* Pass state-based `type` into TransactionHistory */}
               <TransactionHistory
                 address={walletAddress}
                 type={transactionType}
+                setTransactionTypes={setTransactionTypes}
                 chain_id={chains.find((c) => c.name == selectedChain).id}
               />
             </CardContent>
