@@ -9,11 +9,8 @@ export async function POST(request: NextRequest) {
         const body = await request.json()
         const { userAddress, amount } = body
 
-        const response = await axios.post(
-            `https://trickle-kappa.vercel.app/api/trkl/mint?address=${userAddress}`,
-            {
-                userAddress: userAddress,
-            },
+        const response = await axios.get(
+            `https://trickle-kappa.vercel.app/api/trkl/get-nft?address=${userAddress}`,
             {
                 headers: {
                     "Content-Type": "application/json",
