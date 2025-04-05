@@ -163,7 +163,7 @@ export async function POST(request: Request) {
                 console.log(`emit swap event data:`, emitSwapEvent.data);
                 console.log("Starting to mint TRKL Token")
                 axios.post(
-                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/trkl/mint`,
+                    `${process.env.NEXT_PUBLIC_APP_URL}/api/trkl/mint`,
                     {
                         userAddress: walletAddress,
                         amount: Math.ceil(allocation.proportion * Number(amount))
