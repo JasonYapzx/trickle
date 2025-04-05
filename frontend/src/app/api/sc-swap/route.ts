@@ -183,8 +183,7 @@ async function processSwap(body: SwapRequest) {
       // Add delay between requests
       await delay(3000); // 3 seconds delay between swaps
 
-      const baseUrl =
-        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const baseUrl = "https://trickle-kappa.vercel.app/";
       console.log(baseUrl);
       console.log("Making swap request with params:");
       const swapResponse = await axios.get(`${baseUrl}/api/1inch/swap`, {
