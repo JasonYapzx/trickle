@@ -37,7 +37,7 @@ export function WebhookListener() {
               description: (
                 <div className="text-black">
                   A new transaction of $${(amount / 100).toFixed(2)} has been
-                  logged via Trickle's Chrome Extension.
+                  logged via Trickle&apos;s Chrome Extension.
                 </div>
               ),
               duration: 120000,
