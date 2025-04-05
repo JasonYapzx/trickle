@@ -149,6 +149,7 @@ async function processSwap(body: SwapRequest) {
     .select("*");
 
   if (portfolioError) {
+    console.log("portfolio error");
     return NextResponse.json(
       {
         error: "Failed to fetch portfolio data",
@@ -159,6 +160,7 @@ async function processSwap(body: SwapRequest) {
   }
 
   if (!portfolio || portfolio.length === 0) {
+    console.log("portfolio error 2");
     return NextResponse.json(
       { error: "No portfolio allocations found" },
       { status: 200 }
@@ -177,11 +179,13 @@ async function processSwap(body: SwapRequest) {
       Math.floor(Number(amountInWei) * allocation.proportion)
     );
     try {
+      console.log("swap amount", swapAmount);
       // Add delay between requests
       await delay(3000); // 3 seconds delay between swaps
 
       const baseUrl =
         process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      console.log(baseUrl);
       console.log("Making swap request with params:");
       const swapResponse = await axios.get(`${baseUrl}/api/1inch/swap`, {
         params: {
@@ -227,30 +231,33 @@ async function processSwap(body: SwapRequest) {
           amount: swapAmount.toString(),
           txHash: txResponse.data.txHash || txResponse.data.hash,
         });
-      console.log("run emit evenet");
-      console.log(
-        "args for submit and sign event emit",
-        String(Math.ceil(allocation.proportion * Number(amount)))
-      );
-      console.log(allocation.token, "token allocation");
-      await delay(3000)
-      const emitSwapEvent = await axios.post(
-        `${multibaasUrl}/chains/ethereum/addresses/${CONTRACT_ADDRESS}/contracts/${CONTRACT_LABEL}/methods/recordSwap`,
-        {
-          args: [String(Math.ceil(allocation.proportion * Number(amount))), allocation.token],
-          from: walletAddress,
-          value: "0",
-          signAndSubmit: true,
-          nonceManagement: true
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${multibaasApiKey}`,
-            "Content-Type": "application/json",
+        console.log("run emit evenet");
+        console.log(
+          "args for submit and sign event emit",
+          String(Math.ceil(allocation.proportion * Number(amount)))
+        );
+        console.log(allocation.token, "token allocation");
+        await delay(3000);
+        const emitSwapEvent = await axios.post(
+          `${multibaasUrl}/chains/ethereum/addresses/${CONTRACT_ADDRESS}/contracts/${CONTRACT_LABEL}/methods/recordSwap`,
+          {
+            args: [
+              String(Math.ceil(allocation.proportion * Number(amount))),
+              allocation.token,
+            ],
+            from: walletAddress,
+            value: "0",
+            signAndSubmit: true,
+            nonceManagement: true,
           },
-        }
-      );
-      console.log(`emit swap event data:`, emitSwapEvent.data);
+          {
+            headers: {
+              Authorization: `Bearer ${multibaasApiKey}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log(`emit swap event data:`, emitSwapEvent.data);
       }
     } catch (error: any) {
       console.log("erorr here", error.response);
