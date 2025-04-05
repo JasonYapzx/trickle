@@ -15,7 +15,6 @@ export async function POST(request: Request) {
         process.env.NEXT_PUBLIC_BASE_MULTIBAAS_CONTRACT_ADDRESS || "";
     const CONTRACT_LABEL =
         process.env.NEXT_PUBLIC_BASE_MULTIBAAS_CONTRACT_LABEL || "";
-    const multiplier = 1;
     if (!multibaasUrl || !multibaasApiKey) {
         return NextResponse.json(
             { error: "MultiBaas configuration missing" },
@@ -167,7 +166,7 @@ export async function POST(request: Request) {
                     `${process.env.NEXT_PUBLIC_BASE_URL}/api/trkl/mint`,
                     {
                         userAddress: walletAddress,
-                        amount: multiplier * Math.ceil(allocation.proportion * Number(amount))
+                        amount: Math.ceil(allocation.proportion * Number(amount))
                     },
                     {
                         headers: {
