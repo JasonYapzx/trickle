@@ -99,7 +99,7 @@ export function AssetAllocationCard({
   const totalValue = tokens.reduce((acc, token) => acc + token.value_usd, 0);
 
   return (
-    <Card className="col-span-full lg:col-span-1">
+    <Card className="col-span-full lg:col-span-1 max-w-md lg:max-w-7xl overflow-x-auto bg-[#F2FED1]">
       <CardHeader>
         <CardTitle>Asset Allocation</CardTitle>
         <CardDescription>Breakdown of your portfolio</CardDescription>

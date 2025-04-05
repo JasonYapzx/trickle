@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useGeolocation } from '@/hooks/use-geolocation';
 import { MorphingText } from './magicui/morphing-text';
 import { SignIn } from './auth/sign-in';
+import Image from 'next/image';
+
 
 const texts = [
   "GROW",
@@ -96,14 +98,18 @@ export default function Hero() {
               `${Math.abs(Number(geolocation.latitude))}° ${Math.abs(Number(geolocation.latitude)) === Number(geolocation.latitude) ? "N" : "S"}, ${Math.abs(Number(geolocation.longitude))}° ${Math.abs(Number(geolocation.longitude)) === Number(geolocation.longitude) ? "E" : "W"}`
             )}
           </p>
-          <div className="flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 md:w-8 md:h-8">
-              <path d="M15.2929 5.29289L10.5858 0.585786C10.2107 0.210714 9.78929 0 9.34314 0H2C0.895431 0 0 0.895431 0 2V9.34314C0 9.78929 0.210714 10.2107 0.585786 10.5858L5.29289 15.2929C5.68342 15.6834 6.31658 15.6834 6.70711 15.2929L15.2929 6.70711C15.6834 6.31658 15.6834 5.68342 15.2929 5.29289Z" fill="currentColor"/>
-              <path d="M22 22C23.1046 22 24 21.1046 24 20V12.6569C24 12.2107 23.7893 11.7893 23.4142 11.4142L18.7071 6.70711C18.3166 6.31658 17.6834 6.31658 17.2929 6.70711L8.70711 15.2929C8.31658 15.6834 8.31658 16.3166 8.70711 16.7071L13.4142 21.4142C13.7893 21.7893 14.2107 22 14.6569 22H22Z" fill="currentColor"/>
-            </svg>
+          <div className="flex items-center justify-between space-x-3">
+            <Image
+              src="/trickle_icon.png"
+              alt="Trickle Logo"
+              width={32}
+              height={40}
+              className="w-6 h-8 md:w-8 md:h-10 "
+            />
+            <h1 className='font-medium text-xl'>Trickle</h1>
           </div>
-          <nav className="flex gap-3 text-sm">
-            <a href="/app" className="hover:opacity-70 transition-opacity">Dashboard</a>
+          <nav className="flex gap-3 text-sm items-center">
+            {/* <a href="/app" className="hover:opacity-70 transition-opacity">Dashboard</a> */}
             <SignIn />
           </nav>
         </div>
@@ -123,7 +129,7 @@ export default function Hero() {
               className="inline-block font-black text-neutral-950 transition-transform duration-300"
               style={{ transform: `skewX(-18deg)` }}
             >
-              <MorphingText texts={texts} className='text-3xl sm:text-5xl md:text-7xl'/>
+              <MorphingText texts={texts} className='text-3xl sm:text-5xl md:text-7xl' />
             </span>
           </h1>
         </div>
@@ -137,7 +143,7 @@ export default function Hero() {
             opacity: opacityValue
           }}
         >
-         Automated investments in any purchase you make. Focus on what matters most to you.
+          Automated investments in any purchase you make. Focus on what matters most to you.
         </p>
 
         {/* Scroll Indicators */}

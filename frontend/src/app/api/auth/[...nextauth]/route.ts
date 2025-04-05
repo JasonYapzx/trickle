@@ -2,7 +2,7 @@ import NextAuth, { NextAuthOptions } from "next-auth";
 
 const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
-  
+
   useSecureCookies: process.env.NODE_ENV === "production",
   cookies: {
     sessionToken: {
@@ -15,14 +15,21 @@ const authOptions: NextAuthOptions = {
       },
     },
   },
-  
+
   providers: [
     {
       id: "worldcoin",
       name: "Worldcoin",
       type: "oauth",
       wellKnown: "https://id.worldcoin.org/.well-known/openid-configuration",
-      authorization: { params: { scope: "openid" } },
+      authorization: {
+        params: {
+          response_type: "code",
+          response_mode: "query",
+          scope: "openid",
+          ready: "true"
+        }
+      },
       clientId: process.env.WLD_CLIENT_ID,
       clientSecret: process.env.WLD_CLIENT_SECRET,
       idToken: true,
@@ -38,17 +45,18 @@ const authOptions: NextAuthOptions = {
     },
   ],
   callbacks: {
-    async signIn({ user }) {
-      return true;
+    async jwt({ token }) {
+      return token;
     },
-    // Add this to ensure the correct redirect after sign-in
-    async redirect({ url, baseUrl }) {
-      // Allows relative callback URLs
-      if (url.startsWith("/")) return `${baseUrl}${url}`
-      // Allows callback URLs on the same origin
-      else if (new URL(url).origin === baseUrl) return url
-      return baseUrl
-    },
+    async redirect({ url }) {
+      const localUrl = "http://localhost:3000/app";
+      if (process.env.NODE_ENV === "development") {
+        return localUrl;
+      } else {
+        return process.env.NEXTAUTH_URL + "/app";
+      }
+    }
+    
   },
   debug: process.env.NODE_ENV === "development",
 };
