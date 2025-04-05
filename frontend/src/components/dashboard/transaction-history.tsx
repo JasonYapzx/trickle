@@ -201,7 +201,7 @@ export function TransactionHistory({
               ...trx,
               tokenInfo: {
                 ...tokenData?.[
-                  trx?.details?.tokenActions?.[tokenActions.length - 1]?.address
+                trx?.details?.tokenActions?.[tokenActions.length - 1]?.address
                 ],
               },
             };
@@ -374,93 +374,124 @@ export function TransactionHistory({
           </Select>
         </div>
       )}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Type</TableHead>
-            <TableHead>Chain</TableHead>
-            <TableHead>Asset</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Value</TableHead>
-            <TableHead className="hidden md:table-cell">From/To</TableHead>
-            <TableHead className="hidden lg:table-cell">Time</TableHead>
-            <TableHead className="hidden lg:table-cell">Status</TableHead>
-            {/* <TableHead className="text-right">Action</TableHead> */}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
-            <TableRow>
-              <TableCell colSpan={8} className="text-center py-8">
-                Loading...
-              </TableCell>
-            </TableRow>
-          ) : filteredTransactions.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={8}
-                className="text-center py-8 text-muted-foreground"
-              >
-                No transactions found
-              </TableCell>
-            </TableRow>
-          ) : (
-            filteredTransactions.map((tx) => (
-              <TableRow key={tx.id}>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    {getTypeIcon(tx.type)}
-                    <span className="hidden sm:inline-block">
-                      {getTypeBadge(tx.type)}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    {/* <Avatar className="h-6 w-6">
-                      <img
-                        src={`/placeholder.svg?height=24&width=24&text=${
-                          tx.asset.split(" ")[0]
-                        }`}
-                        alt={tx.asset}
-                      />
-                    </Avatar> */}
-                    <span>{chainIdToName[tx.chainId]}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <span>{tx.asset}</span>
-                  </div>
-                </TableCell>
-                <TableCell>{tx.amount}</TableCell>
-                <TableCell>{tx.value}</TableCell>
-                <TableCell className="hidden md:table-cell font-mono text-xs">
-                  {shortenAddress(tx.address)}
-                </TableCell>
-                <TableCell className="hidden lg:table-cell text-muted-foreground">
-                  {formatDistanceToNow(new Date(tx.timestamp), {
-                    addSuffix: true,
-                  })}
-                </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  <Badge
-                    variant={
-                      tx.status === "completed"
-                        ? "default"
-                        : tx.status === "fail"
-                        ? "destructive"
-                        : "outline"
-                    }
-                  >
-                    {tx.status}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+      <div className="rounded-md border">
+        {availableChains.length > 1 && (
+          <div className="m-4 flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">
+              Chain:
+            </span>
+            <Select
+              onValueChange={(val) => setSelectedChainId(parseInt(val))}
+              defaultValue={selectedChainId?.toString()}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select Chain" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableChains.map((chainId) => (
+                  <SelectItem key={chainId} value={chainId.toString()}>
+                    {chainIdToName[chainId] || `Chain ${chainId}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        <div className="relative">
+          <div className="sticky top-0 bg-white z-10">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Chain</TableHead>
+                  <TableHead>Asset</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Value</TableHead>
+                  <TableHead className="hidden md:table-cell">From/To</TableHead>
+                  <TableHead className="hidden lg:table-cell">Time</TableHead>
+                  <TableHead className="hidden lg:table-cell">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+            </Table>
+          </div>
+          <div className="max-h-96 relative overflow-y-auto">
+            <Table>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredTransactions.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={8}
+                      className="text-center py-8 text-muted-foreground"
+                    >
+                      No transactions found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredTransactions.map((tx) => (
+                    <TableRow key={tx.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {getTypeIcon(tx.type)}
+                          <span className="hidden sm:inline-block">
+                            {getTypeBadge(tx.type)}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {/* <Avatar className="h-6 w-6">
+                          <img
+                            src={`/placeholder.svg?height=24&width=24&text=${
+                              tx.asset.split(" ")[0]
+                            }`}
+                            alt={tx.asset}
+                          />
+                        </Avatar> */}
+                          <span>{chainIdToName[tx.chainId]}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span>{tx.asset}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{tx.amount}</TableCell>
+                      <TableCell>{tx.value}</TableCell>
+                      <TableCell className="hidden md:table-cell font-mono text-xs">
+                        {shortenAddress(tx.address)}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell text-muted-foreground">
+                        {formatDistanceToNow(new Date(tx.timestamp), {
+                          addSuffix: true,
+                        })}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <Badge
+                          variant={
+                            tx.status === "completed"
+                              ? "default"
+                              : tx.status === "fail"
+                                ? "destructive"
+                                : "outline"
+                          }
+                        >
+                          {tx.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

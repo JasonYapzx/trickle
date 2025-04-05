@@ -11,7 +11,7 @@ export default function EmptyScreen({
   return (
     <div className="flex flex-col space-y-6">
       <h1 className="text-2xl font-semibold text-foreground">
-        Trickle Chat
+        Trickle
       </h1>
       <div className="space-y-4">
         <div className="p-4 rounded-lg border bg-card">
@@ -72,7 +72,7 @@ export default function EmptyScreen({
               className="w-full justify-start"
               onClick={openModal}
             >
-              <InfoIcon />
+              <InfoIcon className="mr-2"/>
               Gemini Nano Information
             </Button>
           </div>

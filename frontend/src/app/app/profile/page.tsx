@@ -63,6 +63,11 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto p-4 max-w-xl">
+      <h1 className="text-2xl font-bold tracking-tight text-black col-span-full mb-4 inline-flex items-center">
+        <span className="bg-gradient-to-r from-[#CCFF00]/90 to-transparent bg-[length:100%_40%] bg-no-repeat bg-bottom">
+          Profile
+        </span>
+      </h1>
       <Card>
         <CardHeader>
           <CardTitle>Profile</CardTitle>
@@ -83,10 +88,10 @@ export default function ProfilePage() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="font-semibold">Name:</div>
                 <div className="col-span-2">{user.name}</div>
-                
+
                 <div className="font-semibold">Email:</div>
                 <div className="col-span-2">{user.email}</div>
-                
+
                 <div className="font-semibold">Address:</div>
                 <div className="col-span-2 break-all">{user.walletAddress}</div>
               </div>
@@ -114,10 +119,10 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-3">
                     <div className="font-semibold">Token:</div>
                     <div className="col-span-2">{item.token}</div>
-                    
+
                     <div className="font-semibold">Proportion:</div>
                     <div className="col-span-2 font-bold">{item.proportion}</div>
-                    
+
                     <div className="font-semibold">Token Address:</div>
                     <div className="col-span-2 break-all">{item.tokenAddress}</div>
                   </div>

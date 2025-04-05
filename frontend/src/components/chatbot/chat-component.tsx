@@ -9,7 +9,10 @@ import { systemPrompt } from "@/app/app/chatbot/page";
 import EmptyScreen from "./empty-screen";
 import { Textarea } from "../ui/textarea";
 import { TransactionList } from "./rendering/transaction-list";
+import DuneAnalytics from "./rendering/top-wallets";
+import ProfileData from "./rendering/profile-data";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface ToolAnnotation {
   type: string;
@@ -76,7 +79,8 @@ export default function ChatComponent({
     chain: 'base',
     walletAddress: '0x9369d176081C548c9E72997e61A03E0e6DB94697',
     limit: 5,
-    offset: 0
+    offset: 0,
+    userId: 1
   });
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -126,6 +130,10 @@ export default function ChatComponent({
             }
           ]);
           scrollToBottom();
+          toast("New message", {
+            description: "Trickle AI has responded to your message",
+            duration: 3000,
+          });
         }
       } else {
         const apiMessages = [
@@ -159,7 +167,13 @@ export default function ChatComponent({
 
             while (true) {
               const { done, value } = await reader.read();
-              if (done) break;
+              if (done) {
+                toast("New message", {
+                  description: "Trickle AI has responded to your message",
+                  duration: 3000,
+                });
+                break;
+              }
 
               const chunk = decoder.decode(value);
               buffer += chunk;
@@ -200,14 +214,34 @@ export default function ChatComponent({
                     const toolResultJson = JSON.parse(lineJson);
                     console.log('Tool result:', toolResultJson);
 
-                    currentAnnotations.push({
-                      type: 'tool-result',
-                      toolCallId: toolResultJson.toolCallId,
-                      status: 'success',
-                      data: toolResultJson.transactions,
-                      chain: toolResultJson.chain,
-                      componentName: 'TransactionList',
-                    });
+                    if (toolResultJson.transactions) {
+                      currentAnnotations.push({
+                        type: 'tool-result',
+                        toolCallId: toolResultJson.toolCallId,
+                        status: 'success',
+                        data: toolResultJson.transactions,
+                        chain: toolResultJson.chain,
+                        componentName: 'TransactionList',
+                      });
+                    } else if (toolResultJson.wallets) {
+                      currentAnnotations.push({
+                        type: 'tool-result',
+                        toolCallId: toolResultJson.toolCallId,
+                        status: 'success',
+                        data: toolResultJson.wallets,
+                        chain: toolResultJson.chain,
+                        componentName: 'DuneAnalytics',
+                      })
+                    } else if (toolResultJson.table) {
+                      console.log('Table result:', toolResultJson.table);
+                      currentAnnotations.push({
+                        type: 'tool-result',
+                        toolCallId: toolResultJson.toolCallId,
+                        status: 'success',
+                        data: toolResultJson.data,
+                        componentName: 'ProfileData',
+                      })
+                    }
                     setToolAnnotations(prev => ({
                       ...prev,
                       [assistantMessageId]: currentAnnotations
@@ -255,8 +289,13 @@ export default function ChatComponent({
 
   const renderToolComponent = (annotation: ToolAnnotation) => {
     if (annotation.data) {
+      console.log(annotation, "AAAAAAA")
       if (annotation.componentName === 'TransactionList') {
         return <TransactionList data={annotation.data} chain={annotation.chain ?? toolDefaults.chain} />;
+      } else if (annotation.componentName === 'DuneAnalytics') {
+        return <DuneAnalytics data={annotation.data} />;
+      } else if (annotation.componentName === 'ProfileData') {
+        return <ProfileData data={annotation.data} />;
       }
     }
 
@@ -273,6 +312,25 @@ export default function ChatComponent({
       setToolAnnotations(JSON.parse(savedAnnotations));
     }
   }, []);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem('chatMessages', JSON.stringify(messages));
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (Object.keys(toolAnnotations).length > 0) {
+      localStorage.setItem('chatAnnotations', JSON.stringify(toolAnnotations));
+    }
+  }, [toolAnnotations]);
+
+  const clearChatHistory = () => {
+    setMessages([]);
+    setToolAnnotations({});
+    localStorage.removeItem('chatMessages');
+    localStorage.removeItem('chatAnnotations');
+  };
 
   return (
     <div className="flex flex-col flex-1 h-screen items-center">
@@ -347,6 +405,17 @@ export default function ChatComponent({
               <span className="sr-only">Send</span>
             </Button>
 
+            <div className="flex justify-between items-center w-full max-w-[720px] px-2">
+              <Button
+                variant="neutral"
+                size="sm"
+                disabled={messages.length === 0}
+                onClick={clearChatHistory}
+                className={cn('text-muted-foreground rounded-xl hover:text-foreground', messages.length === 0 ? "hover:cursor-not-allowed" : 'hover:cursor-pointer')}
+              >
+                Clear History
+              </Button>
+            </div>
           </div>
         </div>
       </form>
@@ -376,9 +445,9 @@ function SendIcon(props: any) {
 
 const UserMessage = ({ message }: { message: Message }) => {
   return (
-    <div className="flex items-start gap-3 justify-end">
-      <div className="bg-primary rounded-lg p-3 max-w-[80%] text-primary-foreground">
-        <div className="text-sm">{message.content}</div>
+    <div className="flex items-start gap-3 justify-end w-full">
+      <div className="bg-primary rounded-lg p-3 max-w-[80%] text-primary-foreground break-words">
+        <div className="text-sm whitespace-pre-wrap">{message.content}</div>
       </div>
       <Avatar className="w-8 h-8 shrink-0">
         <AvatarImage src="/placeholder-user.jpg" />
@@ -390,13 +459,13 @@ const UserMessage = ({ message }: { message: Message }) => {
 
 const BotMessage = ({ message }: { message: Message }) => {
   return (
-    <div className="flex items-start gap-3">
+    <div className="flex items-start gap-3 w-full">
       <Avatar className="w-8 h-8 shrink-0">
         <AvatarImage src="/placeholder-user.jpg" />
         <AvatarFallback>BOT</AvatarFallback>
       </Avatar>
-      <div className="bg-muted rounded-lg p-3 max-w-[80%]">
-        <div className="text-sm prose">
+      <div className="bg-muted rounded-lg p-3 max-w-[80%] break-words">
+        <div className="text-sm prose whitespace-pre-wrap">
           <MemoizedReactMarkdown>
             {message.content}
           </MemoizedReactMarkdown>
