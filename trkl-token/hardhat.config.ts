@@ -8,6 +8,7 @@ export default {
     networks: {
         saga: {
             url: process.env.SAGA_RPC,
+            chainId: 2743824585691000,
             accounts: [process.env.PRIVATE_KEY],
         },
     },
