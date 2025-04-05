@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   try {
     const response = await fetch(
-      "https://api.1inch.dev/balance/v1.2/8453/balances/0xffE59F5d058aD4929E7f54CcA468BDc2CA9D635d",
+      "https://api.1inch.dev/balance/v1.2/8453/balances/0x9369d176081C548c9E72997e61A03E0e6DB94697",
       requestOptions
     );
     const balances = await response.json();
@@ -71,6 +71,11 @@ document.addEventListener("DOMContentLoaded", async function () {
       </ul>`;
 
     const holdingsListElement = document.getElementById("holdings-list");
+    const viewProfileElement = document.getElementById("view-profile-button");
+
+    viewProfileElement.addEventListener("click", () => {
+      window.open("https://trickle-kappa.vercel.app/app", "_blank");
+    });
 
     const totalValue = mergedData.reduce((total, token) => {
       const decimals = token["decimals"];

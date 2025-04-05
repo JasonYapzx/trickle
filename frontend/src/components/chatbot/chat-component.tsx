@@ -1,10 +1,16 @@
-"use client"
+"use client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { FormEvent, useEffect, useState } from "react";
 import { MemoizedReactMarkdown } from "./rendering/markdown";
 import { useScrollAnchor } from "@/hooks/use-scroll-anchor";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { systemPrompt } from "@/app/app/chatbot/page";
 import EmptyScreen from "./empty-screen";
 import { Textarea } from "../ui/textarea";
@@ -40,47 +46,55 @@ export default function ChatComponent({
   const [messages, setMessages] = useState<Message[]>([]);
   const { containerRef, messagesRef, scrollToBottom } = useScrollAnchor();
   const [useNano, setUseNano] = useState(false);
-  const [toolAnnotations, setToolAnnotations] = useState<{ [messageId: string]: ToolAnnotation[] }>({});
+  const [toolAnnotations, setToolAnnotations] = useState<{
+    [messageId: string]: ToolAnnotation[];
+  }>({});
 
   const handleSendMessage = async (message: string) => {
     // Set input and mesages
     await Promise.all([
-      new Promise<void>(resolve => {
+      new Promise<void>((resolve) => {
         setInput(message);
         resolve();
       }),
     ]);
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
-    const form = document.querySelector('form');
+    const form = document.querySelector("form");
     if (form) {
-      const submitEvent = new SubmitEvent('submit', {
+      const submitEvent = new SubmitEvent("submit", {
         bubbles: true,
-        cancelable: true
+        cancelable: true,
       });
       form.dispatchEvent(submitEvent);
     }
   };
 
-  const handleKeyDown = (e: { key: string; shiftKey: any; preventDefault: () => void; }) => {
+  const handleKeyDown = (e: {
+    key: string;
+    shiftKey: any;
+    preventDefault: () => void;
+  }) => {
     if (e.key === "Enter") {
       if (e.shiftKey) {
         e.preventDefault();
         setInput((prevInput) => prevInput + "\n");
       } else {
         e.preventDefault();
-        const form = (e as unknown as { target: HTMLTextAreaElement }).target.closest("form");
+        const form = (
+          e as unknown as { target: HTMLTextAreaElement }
+        ).target.closest("form");
         if (form) form.requestSubmit();
       }
     }
   };
 
   const [toolDefaults, setToolDefaults] = useState({
-    chain: 'base',
-    walletAddress: '0x9369d176081C548c9E72997e61A03E0e6DB94697',
+    chain: "base",
+    walletAddress: "0x9369d176081C548c9E72997e61A03E0e6DB94697",
     limit: 5,
     offset: 0,
-    userId: 1
+    userId: 1,
   });
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -90,12 +104,12 @@ export default function ChatComponent({
     const userMessage: Message = {
       id: userMessageId,
       content: input,
-      role: "user"
+      role: "user",
     };
 
-    const messagesForApi = messages.map(msg => ({
+    const messagesForApi = messages.map((msg) => ({
       role: msg.role,
-      content: msg.content
+      content: msg.content,
     }));
 
     const newMessages: Message[] = [...messages, userMessage];
@@ -111,7 +125,9 @@ export default function ChatComponent({
         const model = await window.ai.languageModel.create({
           systemPrompt: systemPrompt,
         });
-        const stream = await model.promptStreaming("User: " + userMessage.content);
+        const stream = await model.promptStreaming(
+          "User: " + userMessage.content
+        );
         let result = "";
         let previousChunk = "";
         for await (const chunk of stream) {
@@ -126,8 +142,8 @@ export default function ChatComponent({
             {
               id: assistantMessageId,
               role: "assistant",
-              content: result
-            }
+              content: result,
+            },
           ]);
           scrollToBottom();
           toast("New message", {
@@ -138,32 +154,34 @@ export default function ChatComponent({
       } else {
         const apiMessages = [
           ...messagesForApi,
-          { role: userMessage.role, content: userMessage.content }
+          { role: userMessage.role, content: userMessage.content },
         ];
 
-        const response = await fetch('/api/chat/gemini', {
-          method: 'POST',
+        const response = await fetch("/api/chat/gemini", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             messages: apiMessages,
-            toolDefaults: toolDefaults
+            toolDefaults: toolDefaults,
           }),
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch response from ${useNano ? 'Nano' : 'Gemini'} model`);
+          throw new Error(
+            `Failed to fetch response from ${useNano ? "Nano" : "Gemini"} model`
+          );
         }
 
         const reader = response.body?.getReader();
         const decoder = new TextDecoder();
-        let result = '';
+        let result = "";
         let currentAnnotations: ToolAnnotation[] = [];
 
         if (reader) {
           try {
-            let buffer = '';
+            let buffer = "";
 
             while (true) {
               const { done, value } = await reader.read();
@@ -177,83 +195,87 @@ export default function ChatComponent({
 
               const chunk = decoder.decode(value);
               buffer += chunk;
-              const lines = buffer.split('\n');
-              buffer = lines.pop() || ''; // Keep the last incomplete line in the buffer
+              const lines = buffer.split("\n");
+              buffer = lines.pop() || ""; // Keep the last incomplete line in the buffer
 
               // Inside the section where you process data lines
               for (const line of lines) {
                 if (!line.trim()) continue;
-                if (line.startsWith('data:')) {
+                if (line.startsWith("data:")) {
                   try {
                     const dataContent = line.slice(5).trim();
-                    if (!dataContent || dataContent === '[DONE]') continue;
+                    if (!dataContent || dataContent === "[DONE]") continue;
                     const jsonData = JSON.parse(dataContent);
 
-                    if (jsonData.type === 'tool-status' || jsonData.type === 'custom-render') {
+                    if (
+                      jsonData.type === "tool-status" ||
+                      jsonData.type === "custom-render"
+                    ) {
                       currentAnnotations.push(jsonData);
-                      setToolAnnotations(prev => ({
+                      setToolAnnotations((prev) => ({
                         ...prev,
-                        [assistantMessageId]: currentAnnotations
+                        [assistantMessageId]: currentAnnotations,
                       }));
                     }
                   } catch (e) {
-                    console.error('Error parsing annotation data:', e, line);
+                    console.log("Error parsing annotation data:", e, line);
                   }
-                }
-                else if (line.startsWith('0:')) {
+                } else if (line.startsWith("0:")) {
                   try {
-                    const content = line.slice(2).trim().replace(/^"|\"$/g, '').replace(/\\n/g, '\n');
+                    const content = line
+                      .slice(2)
+                      .trim()
+                      .replace(/^"|\"$/g, "")
+                      .replace(/\\n/g, "\n");
                     result += content;
                   } catch (e) {
-                    console.error('Error parsing content:', e, line);
+                    console.log("Error parsing content:", e, line);
                   }
-                }
-                else if (line.startsWith('a:')) {
+                } else if (line.startsWith("a:")) {
                   try {
                     const lineJson = JSON.parse(line.slice(2)).result;
                     const toolResultJson = JSON.parse(lineJson);
-                    console.log('Tool result:', toolResultJson);
+                    console.log("Tool result:", toolResultJson);
 
                     if (toolResultJson.transactions) {
                       currentAnnotations.push({
-                        type: 'tool-result',
+                        type: "tool-result",
                         toolCallId: toolResultJson.toolCallId,
-                        status: 'success',
+                        status: "success",
                         data: toolResultJson.transactions,
                         chain: toolResultJson.chain,
-                        componentName: 'TransactionList',
+                        componentName: "TransactionList",
                       });
                     } else if (toolResultJson.wallets) {
                       currentAnnotations.push({
-                        type: 'tool-result',
+                        type: "tool-result",
                         toolCallId: toolResultJson.toolCallId,
-                        status: 'success',
+                        status: "success",
                         data: toolResultJson.wallets,
                         chain: toolResultJson.chain,
-                        componentName: 'DuneAnalytics',
-                      })
+                        componentName: "DuneAnalytics",
+                      });
                     } else if (toolResultJson.table) {
-                      console.log('Table result:', toolResultJson.table);
+                      console.log("Table result:", toolResultJson.table);
                       currentAnnotations.push({
-                        type: 'tool-result',
+                        type: "tool-result",
                         toolCallId: toolResultJson.toolCallId,
-                        status: 'success',
+                        status: "success",
                         data: toolResultJson.data,
-                        componentName: 'ProfileData',
-                      })
+                        componentName: "ProfileData",
+                      });
                     }
-                    setToolAnnotations(prev => ({
+                    setToolAnnotations((prev) => ({
                       ...prev,
-                      [assistantMessageId]: currentAnnotations
+                      [assistantMessageId]: currentAnnotations,
                     }));
                   } catch (e) {
-                    console.error('Error parsing tool result:', e, line);
+                    console.log("Error parsing tool result:", e, line);
                   }
-                } else if (line.startsWith('e:')) {
+                } else if (line.startsWith("e:")) {
                   break; // Exit the loop after receiving the error message
-                }
-                else {
-                  console.log('Unknown line format:', line);
+                } else {
+                  console.log("Unknown line format:", line);
                 }
               }
 
@@ -261,9 +283,9 @@ export default function ChatComponent({
                 ...newMessages,
                 {
                   id: assistantMessageId,
-                  role: 'assistant',
-                  content: result
-                }
+                  role: "assistant",
+                  content: result,
+                },
               ]);
               scrollToBottom();
             }
@@ -273,15 +295,17 @@ export default function ChatComponent({
         }
       }
     } catch (e) {
-      console.error('Chat error:', e);
+      console.log("Chat error:", e);
       const errorMessageId = `error-${Date.now()}`;
       setMessages([
         ...newMessages,
         {
           id: errorMessageId,
-          role: 'assistant',
-          content: `Error: Failed to get response from ${useNano ? 'Nano' : 'Gemini'} model. Please try again.`
-        }
+          role: "assistant",
+          content: `Error: Failed to get response from ${
+            useNano ? "Nano" : "Gemini"
+          } model. Please try again.`,
+        },
       ]);
       scrollToBottom();
     }
@@ -289,12 +313,17 @@ export default function ChatComponent({
 
   const renderToolComponent = (annotation: ToolAnnotation) => {
     if (annotation.data) {
-      console.log(annotation, "AAAAAAA")
-      if (annotation.componentName === 'TransactionList') {
-        return <TransactionList data={annotation.data} chain={annotation.chain ?? toolDefaults.chain} />;
-      } else if (annotation.componentName === 'DuneAnalytics') {
+      console.log(annotation, "AAAAAAA");
+      if (annotation.componentName === "TransactionList") {
+        return (
+          <TransactionList
+            data={annotation.data}
+            chain={annotation.chain ?? toolDefaults.chain}
+          />
+        );
+      } else if (annotation.componentName === "DuneAnalytics") {
         return <DuneAnalytics data={annotation.data} />;
-      } else if (annotation.componentName === 'ProfileData') {
+      } else if (annotation.componentName === "ProfileData") {
         return <ProfileData data={annotation.data} />;
       }
     }
@@ -303,8 +332,8 @@ export default function ChatComponent({
   };
 
   useEffect(() => {
-    const savedMessages = localStorage.getItem('chatMessages');
-    const savedAnnotations = localStorage.getItem('chatAnnotations');
+    const savedMessages = localStorage.getItem("chatMessages");
+    const savedAnnotations = localStorage.getItem("chatAnnotations");
     if (savedMessages) {
       setMessages(JSON.parse(savedMessages));
     }
@@ -315,26 +344,29 @@ export default function ChatComponent({
 
   useEffect(() => {
     if (messages.length > 0) {
-      localStorage.setItem('chatMessages', JSON.stringify(messages));
+      localStorage.setItem("chatMessages", JSON.stringify(messages));
     }
   }, [messages]);
 
   useEffect(() => {
     if (Object.keys(toolAnnotations).length > 0) {
-      localStorage.setItem('chatAnnotations', JSON.stringify(toolAnnotations));
+      localStorage.setItem("chatAnnotations", JSON.stringify(toolAnnotations));
     }
   }, [toolAnnotations]);
 
   const clearChatHistory = () => {
     setMessages([]);
     setToolAnnotations({});
-    localStorage.removeItem('chatMessages');
-    localStorage.removeItem('chatAnnotations');
+    localStorage.removeItem("chatMessages");
+    localStorage.removeItem("chatAnnotations");
   };
 
   return (
     <div className="flex flex-col flex-1 h-screen items-center">
-      <div className="flex-1 p-2 overflow-auto mb-[120px] md:mb-[140px] h-full max-w-[720px]" ref={containerRef}>
+      <div
+        className="flex-1 p-2 overflow-auto mb-[120px] md:mb-[140px] h-full max-w-[720px]"
+        ref={containerRef}
+      >
         <div
           className="flex min-h-full flex-col gap-4 py-4 overflow-visible"
           ref={messagesRef}
@@ -351,9 +383,12 @@ export default function ChatComponent({
                     {annotations.length > 0 && (
                       <div className="ml-11 flex flex-col gap-3 rounded-[30px]">
                         {annotations
-                          .filter(ann => ann.type === 'tool-result')
+                          .filter((ann) => ann.type === "tool-result")
                           .map((annotation, idx) => (
-                            <div key={`tool-${m.id}-${idx}`} className="relative rounded-[30px]">
+                            <div
+                              key={`tool-${m.id}-${idx}`}
+                              className="relative rounded-[30px]"
+                            >
                               {renderToolComponent(annotation)}
                             </div>
                           ))}
@@ -366,7 +401,10 @@ export default function ChatComponent({
             })
           ) : (
             <div className="mx-auto my-auto text-center w-full max-w-md flex items-center justify-center h-full">
-              <EmptyScreen openModal={openModal} onSendMessage={handleSendMessage} />
+              <EmptyScreen
+                openModal={openModal}
+                onSendMessage={handleSendMessage}
+              />
             </div>
           )}
         </div>
@@ -387,7 +425,10 @@ export default function ChatComponent({
             />
           </div>
           <div className="relative w-full flex">
-            <Select value={useNano ? "nano" : "gemini"} onValueChange={(value) => setUseNano(value === "nano")}>
+            <Select
+              value={useNano ? "nano" : "gemini"}
+              onValueChange={(value) => setUseNano(value === "nano")}
+            >
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Select model" />
               </SelectTrigger>
@@ -411,7 +452,12 @@ export default function ChatComponent({
                 size="sm"
                 disabled={messages.length === 0}
                 onClick={clearChatHistory}
-                className={cn('text-muted-foreground rounded-xl hover:text-foreground', messages.length === 0 ? "hover:cursor-not-allowed" : 'hover:cursor-pointer')}
+                className={cn(
+                  "text-muted-foreground rounded-xl hover:text-foreground",
+                  messages.length === 0
+                    ? "hover:cursor-not-allowed"
+                    : "hover:cursor-pointer"
+                )}
               >
                 Clear History
               </Button>
@@ -466,9 +512,7 @@ const BotMessage = ({ message }: { message: Message }) => {
       </Avatar>
       <div className="bg-muted rounded-lg p-3 max-w-[80%] break-words">
         <div className="text-sm prose whitespace-pre-wrap">
-          <MemoizedReactMarkdown>
-            {message.content}
-          </MemoizedReactMarkdown>
+          <MemoizedReactMarkdown>{message.content}</MemoizedReactMarkdown>
         </div>
       </div>
     </div>

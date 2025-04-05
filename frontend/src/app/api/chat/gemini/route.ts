@@ -18,6 +18,8 @@ import { openai } from "@ai-sdk/openai";
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
+const supabase = createClient();
+
 export async function POST(req: Request) {
   const now = new Date();
   const month = new Intl.DateTimeFormat("en-SG", {
@@ -40,6 +42,20 @@ export async function POST(req: Request) {
   });
 
   const { chain, walletAddress, limit, offset, queryId, userId } = toolDefaults;
+  const { data: aiContextData, error } = await supabase
+    .from("ai_context")
+    .select("context");
+
+  if (error) {
+    console.error("Error fetching context:", error.message);
+    return null;
+  }
+
+  // Combine all context strings into one
+  const combinedAiContext = aiContextData
+    .map((row) => row.context)
+    .join("\n\n");
+  console.log("Combined AI Context:", combinedAiContext);
 
   const defaultsContext = [
     chain && `Chain to use: ${chain}`,
@@ -72,17 +88,19 @@ export async function POST(req: Request) {
         : ""
     } 
     
-    You are a crypto micro-investing assistant designed to help users invest in cryptocurrencies by providing insights and recommendations based on whale activity, token movements, and market trends. Your goal is to assist users in making informed investment decisions while maintaining a professional tone at all times.
+    You are a crypto micro-investing assistant designed to help users invest in cryptocurrencies by providing insights and recommendations based on whale activity, token movements, and market trends. Your goal is to assist users in making informed investment decisions while maintaining a professional tone at all times. Here is some latest context we have in the crypto scene that you can use to help the user: ${combinedAiContext}
     
     Key Guidelines:
     Only analyze past 7 days of data.
     
-    Always analyze multiple whale accounts, using the provided list. Example: [0xd746a2a6048c5d3aff5766a8c4a0c8cfd2311745].
+    Always analyze multiple whale accounts, using the provided list. Example: ["0x428ab2ba90eba0a4be7af34c9ac451ab061ac010", "0x2ce910fbba65b454bbaf6a18c952a70f3bcd8299"].
     
     If users dont mention a specific token name or address, please use some tools with the whale addresses provided above.
     
-    Focus on Ethereum and Base mainnets for analysis.
+    For getTokenPricesByContract and getDailyActiveAccountStatsByContract, use ethereum mainnet only. For the rest, please fetch the Base mainnet address of the token and use that address to fetch the data.
     
+    Protocol should be Ethereum/Base, network should be mainnet.
+
     Consider tokens with significant market movements, high liquidity, and frequent large transactions.
     
     Use multiple tools to provide the most comprehensive insights and avoid relying on a single data point, however, please make sure you do not call multiple tools asynchrously. Always wait for the previous tool to finish before calling the next one. Please also do not result in rate limiting for GPT-4o. 
@@ -174,7 +192,7 @@ export async function POST(req: Request) {
     
     Always provide some numbers and stats no matter what to back up your analysis. For example, if you say that the price is going up, provide the percentage increase and the time frame.
     
-    Always use getTokenPricesByContract first whenever you are analyzing a token. This is to ensure that you have the most accurate and up-to-date information about the token's price and market conditions. Then use the other tools to analyze the token's movements and trends. You must use at least 2 tools everytime. If you think you need to use more than 2 tools, please do so, in fact you should use as many tools as you need to get the most accurate and comprehensive analysis possible, but do not use more than 30000 tokens in total.
+    Always use getTokenPricesByContract first whenever you are analyzing a token. From the response, if there are nulls in the price data, then please ignore it but do not mention in your reply that price data wasn't available. This is to ensure that you have the most accurate and up-to-date information about the token's price and market conditions. If the price data is not available, then ignore it (DO NOT MENTION THAT PRICE WASN'T AVAILABLE). Then use the other tools to analyze the token's movements and trends. You must use at least 2 tools everytime. If you think you need to use more than 2 tools, please do so, in fact you should use as many tools as you need to get the most accurate and comprehensive analysis possible, but do not use more than 30000 tokens in total.
     
     Today's Date Format:
     The current date is ${year}-${month}-${day} (YYYY-MM-DD format). You should just ignore today when analysing the data.`,
