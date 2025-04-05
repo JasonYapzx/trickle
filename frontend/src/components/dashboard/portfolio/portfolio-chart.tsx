@@ -1,5 +1,6 @@
 "use client";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   CategoryScale,
   Chart,
@@ -30,8 +31,10 @@ ChartJS.register(
 
 export function PortfolioChart({
   chartData,
+  isLoading,
 }: {
   chartData: ChartData<"line", number[], string> | null;
+  isLoading: boolean;
 }) {
   const chartRef = useRef<Chart<"line"> | undefined>(undefined);
 
@@ -92,10 +95,20 @@ export function PortfolioChart({
       },
     },
   };
+  if (isLoading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <Skeleton className="h-[240px] w-full rounded-md" />
+      </div>
+    );
+  }
+  if (!chartData) {
+    return (
+      <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
+        No data available
+      </div>
+    );
+  }
 
-  return chartData ? (
-    <Line ref={chartRef} options={options} data={chartData} />
-  ) : (
-    <div>Loading...</div>
-  );
+  return <Line ref={chartRef} options={options} data={chartData} />;
 }

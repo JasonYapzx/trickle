@@ -6,7 +6,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatCurrency, formatPercentage } from "@/lib/utils";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -30,7 +30,7 @@ export const PortfolioCard = ({
   address: string;
   chain_id: string;
   timerange: string;
-  setTimerange: Dispatch<SetStateAction<string>>;
+  setTimerange: React.Dispatch<React.SetStateAction<string>>;
 }) => {
   const [currentValue, setCurrentValue] = useState<number | null>(null);
   const [currentProfitAndLoss, setCurrentProfitAndLoss] = useState<
@@ -47,58 +47,64 @@ export const PortfolioCard = ({
     }[];
   } | null>(null);
 
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
   useEffect(() => {
     async function fetchPortfolioGeneral() {
+      setIsLoading(true);
+
       const params = new URLSearchParams();
       params.append("address", address);
       params.append("chain_id", chain_id);
       params.append("timerange", timerange);
       params.append("use_cache", "true");
 
-      const res = await fetch(
-        `/api/1inch/portfolio/general?${params.toString()}`
-      );
-      const { value, profitAndLoss, chart } = await res.json();
-
-      if (value.result && value.result.length > 0) {
-        setCurrentValue(value.result[0].value_usd);
-      }
-
-      if (profitAndLoss.result && profitAndLoss.result.length > 0) {
-        setCurrentProfitAndLoss(
-          profitAndLoss.result.find(
-            (data: { chain_id: number }) => data.chain_id === parseInt(chain_id)
-          ).roi
+      try {
+        const res = await fetch(
+          `/api/1inch/portfolio/general?${params.toString()}`
         );
-      }
+        const { value, profitAndLoss, chart } = await res.json();
 
-      if (chart.result) {
-        const data: PortfolioPoint[] = chart.result;
+        if (value?.result?.length > 0) {
+          setCurrentValue(value.result[0].value_usd);
+        }
 
-        const labels = data.map((point) => {
-          const date = new Date(point.timestamp * 1000);
-          return date.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-          });
-        });
+        if (profitAndLoss?.result?.length > 0) {
+          const match = profitAndLoss.result.find(
+            (data: { chain_id: number }) => data.chain_id === parseInt(chain_id)
+          );
+          if (match) setCurrentProfitAndLoss(match.roi);
+        }
 
-        const values = data.map((point) => point.value_usd);
+        if (chart?.result) {
+          const data: PortfolioPoint[] = chart.result;
+          const labels = data.map((point) =>
+            new Date(point.timestamp * 1000).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            })
+          );
+          const values = data.map((point) => point.value_usd);
 
-        const newData = {
-          labels,
-          datasets: [
-            {
-              label: "Portfolio Value",
-              data: values,
-              borderColor: "rgb(99, 102, 241)",
-              backgroundColor: "rgba(99, 102, 241, 0.5)", // replaced with gradient later
-              fill: true,
-            },
-          ],
-        };
+          const newData = {
+            labels,
+            datasets: [
+              {
+                label: "Portfolio Value",
+                data: values,
+                borderColor: "rgb(99, 102, 241)",
+                backgroundColor: "rgba(99, 102, 241, 0.5)",
+                fill: true,
+              },
+            ],
+          };
 
-        setChartData(newData);
+          setChartData(newData);
+        }
+      } catch (err) {
+        console.error("Error fetching portfolio data:", err);
+      } finally {
+        setIsLoading(false);
       }
     }
 
@@ -106,7 +112,7 @@ export const PortfolioCard = ({
   }, [address, chain_id, timerange]);
 
   return (
-    <Card className="col-span-full lg:col-span-2">
+    <Card className="col-span-full bg-[#F3F3F3] lg:col-span-2 max-w-md lg:max-w-7xl">
       <CardHeader>
         <CardTitle>Portfolio Overview</CardTitle>
         <CardDescription>
@@ -125,13 +131,14 @@ export const PortfolioCard = ({
                   </h2>
                   <div
                     className={`flex items-center text-sm font-medium ${
-                      currentProfitAndLoss &&
-                      (currentProfitAndLoss >= 0
-                        ? "text-green-500"
-                        : "text-red-500")
+                      currentProfitAndLoss !== null
+                        ? currentProfitAndLoss >= 0
+                          ? "text-green-500"
+                          : "text-red-500"
+                        : ""
                     }`}
                   >
-                    {currentProfitAndLoss &&
+                    {currentProfitAndLoss !== null &&
                       `${formatPercentage(currentProfitAndLoss)}`}
                   </div>
                 </div>
@@ -153,46 +160,8 @@ export const PortfolioCard = ({
             </div>
           </div>
           <div className="h-[240px] w-full">
-            <PortfolioChart chartData={chartData} />
+            <PortfolioChart chartData={chartData} isLoading={isLoading} />
           </div>
-          {/* <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <Card className="border-none shadow-none">
-                <CardHeader className="p-3">
-                  <CardDescription>24h Change</CardDescription>
-                  <CardTitle className="flex items-center text-base">
-                    <ArrowUpIcon className="mr-1 h-4 w-4 text-green-500" />
-                    3.12%
-                  </CardTitle>
-                </CardHeader>
-              </Card>
-              <Card className="border-none shadow-none">
-                <CardHeader className="p-3">
-                  <CardDescription>7d Change</CardDescription>
-                  <CardTitle className="flex items-center text-base">
-                    <ArrowUpIcon className="mr-1 h-4 w-4 text-green-500" />
-                    8.2%
-                  </CardTitle>
-                </CardHeader>
-              </Card>
-              <Card className="border-none shadow-none">
-                <CardHeader className="p-3">
-                  <CardDescription>30d Change</CardDescription>
-                  <CardTitle className="flex items-center text-base">
-                    <ArrowDownIcon className="mr-1 h-4 w-4 text-red-500" />
-                    2.4%
-                  </CardTitle>
-                </CardHeader>
-              </Card>
-              <Card className="border-none shadow-none">
-                <CardHeader className="p-3">
-                  <CardDescription>All-time</CardDescription>
-                  <CardTitle className="flex items-center text-base">
-                    <ArrowUpIcon className="mr-1 h-4 w-4 text-green-500" />
-                    124.3%
-                  </CardTitle>
-                </CardHeader>
-              </Card>
-            </div> */}
         </div>
       </CardContent>
     </Card>

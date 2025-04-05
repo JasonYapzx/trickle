@@ -3,11 +3,12 @@
 import { usePathname } from "next/navigation";
 import { SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import {
-  HomeIcon, UserRound
+  HomeIcon, Sparkles, UserRound
 } from "lucide-react";
 
 const navigationItems = [
   { path: "/app", label: "Home", icon: HomeIcon, mobileHidden: true },
+  { path: "/app/chatbot", label: "AI Assistant", icon: Sparkles, mobileHidden: true },
   { path: "/app/profile", label: "Profile", icon: UserRound, mobileHidden: true },
 ];
 

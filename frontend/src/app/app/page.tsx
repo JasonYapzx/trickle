@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle2Icon, ChevronDown, CopyIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +21,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { AssetAllocationCard } from "@/components/dashboard/assetAllocation/asset-allocation-card";
 import { PortfolioCard } from "@/components/dashboard/portfolio/portfolio-card";
-import { TransactionHistory } from "../../components/dashboard/transaction-history";
+import { TransactionHistory } from "@/components/dashboard/transaction-history";
+import { createClient } from "@/lib/supabase";
 
 export default function Dashboard() {
   const [copied, setCopied] = useState(false);
@@ -29,14 +30,15 @@ export default function Dashboard() {
     "All" | "Send" | "Receive" | "Transfer" | undefined
   >(undefined);
   const [portfolioTimeRange, setPortfolioTimeRange] = useState<string>("1day");
-  const walletAddress = "0x7bfee91193d9df2ac0bfe90191d40f23c773c060";
-  const [selectedChain, setSelectedChain] = useState<string>("Ethereum");
+  //   const dummyWalletAddress = "0x7bfee91193d9df2ac0bfe90191d40f23c773c060";
+  const [walletAddress, setWalletAddress] = useState("");
+  const [selectedChain, setSelectedChain] = useState<string>("Base");
+  const [loading, setLoading] = useState(false);
+  const supaBase = createClient();
 
   const chains = [
-    { name: "Ethereum", id: "1" },
-    { name: "Polygon", id: "137" },
-    { name: "Arbitrum", id: "42161" },
-    { name: "Optimism", id: "10" },
+    { name: "Base", id: "8453" },
+    { name: "Celo", id: "42220" },
   ];
   const copyToClipboard = () => {
     navigator.clipboard.writeText(walletAddress);
@@ -50,11 +52,36 @@ export default function Dashboard() {
     )}`;
   };
 
-  return (
+  useEffect(() => {
+    const getCurrentWallet = async () => {
+      setLoading(true);
+      const { data, error } = await supaBase.from("users").select("*").single();
+      if (error) {
+        console.error(error);
+      } else {
+        setWalletAddress(data?.walletAddress);
+        console.log("Address: ", data?.walletAddress);
+      }
+      setLoading(false);
+    };
+
+    getCurrentWallet();
+  }, []);
+
+  return loading || !walletAddress ? (
+    <div className="flex min-h-screen w-full items-center justify-center">
+      <p className="text-muted-foreground text-sm">Loading wallet...</p>
+    </div>
+  ) : (
     <div className="flex min-h-screen w-full justify-center">
-      <div className="w-full max-w-7xl px-4">
-        <main className="grid flex-1 items-start gap-4 p-4 md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:p-6">
-          <div className="col-span-full">
+      <div className="w-full max-w-md lg:max-w-7xl px-0 md:px-4 mb-24 md:mb-0">
+        <main className="grid max-w-md lg:max-w-7xl flex-1 items-start gap-4 p-0 md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:p-6">
+          <h1 className="text-2xl font-bold tracking-tight text-black col-span-full mb-4 inline-flex items-center">
+            <span className="bg-gradient-to-r from-[#CCFF00]/90 to-transparent bg-[length:100%_40%] bg-no-repeat bg-bottom">
+              Dashboard
+            </span>
+          </h1>
+          <div className="col-span-full max-w-md lg:max-w-7xl">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div className="space-y-1">
@@ -79,31 +106,31 @@ export default function Dashboard() {
                     </Button>
                   </div>
                 </div>
+                <div className="col-span-full">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="neutral"
+                        className="w-full justify-between rounded-xl font-medium"
+                      >
+                        {selectedChain}
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="" align="start">
+                      {chains.map((chain) => (
+                        <DropdownMenuItem
+                          key={chain.id}
+                          onClick={() => setSelectedChain(chain.name)}
+                        >
+                          {chain.name}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </CardHeader>
             </Card>
-          </div>
-          <div className="col-span-full">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="neutral"
-                  className="w-full justify-between font-medium"
-                >
-                  {selectedChain}
-                  <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="" align="start">
-                {chains.map((chain) => (
-                  <DropdownMenuItem
-                    key={chain.id}
-                    onClick={() => setSelectedChain(chain.name)}
-                  >
-                    {chain.name}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
           <PortfolioCard
             address={walletAddress}
@@ -116,7 +143,7 @@ export default function Dashboard() {
             chain_id={chains.find((c) => c.name == selectedChain).id}
           />
 
-          <Card className="col-span-full">
+          <Card className="col-span-full max-w-md lg:max-w-7xl">
             <CardHeader className="flex flex-row items-center">
               <div className="grid gap-2">
                 <CardTitle>Transaction History</CardTitle>
@@ -134,7 +161,7 @@ export default function Dashboard() {
                   )
                 }
               >
-                <TabsList className="mb-4">
+                <TabsList className="mb-4 outline-none border-none w-full overflow-x-auto items-start justify-start flex whitespace-nowrap">
                   <TabsTrigger value="All">All</TabsTrigger>
                   <TabsTrigger value="Send">Sent</TabsTrigger>
                   <TabsTrigger value="Receive">Received</TabsTrigger>

@@ -50,25 +50,9 @@ export async function GET(request: NextRequest) {
             });
             const json = await res.json();
             jsonArr.push(json);
-            await delay(0); // optional: adjust based on observed rate limit
+            await delay(500); // optional: adjust based on observed rate limit
         }
 
-        // const limit = pLimit(1); // only one concurrent call to 1inch
-
-        // const [currentValue, profitAndLoss, chartData] = await Promise.all(portfolioUrls.map(url =>
-        //     limit(() => fetch(url, {
-        //         headers: {
-        //             'Authorization': `Bearer ${apiKey}`,
-        //             'Accept': 'application/json',
-        //         },
-        //     }))
-        // ));
-
-        // const [valueJson, profitAndLossJson, chartJson] = await Promise.all([
-        //     currentValue.json(),
-        //     profitAndLoss.json(),
-        //     chartData.json(),
-        // ]);
         return NextResponse.json(
             {
                 value: jsonArr[0],
