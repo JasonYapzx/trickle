@@ -21,7 +21,7 @@ const url = "wss://web3.nodit.io/v1/websocket";
 const params = {
   description: "Trickle live feed",
   condition: {
-    address: "0xA3387b14438d0efEcF6Fd79C0982871083FAb74D",
+    address: "0x4aa651aCd828320BC28F63F8B5A862b660f01393",
     topics: [
       "0x290ee7b788361b665b1ac64dba3eb81eb8293458684c371c3a604ce3c8382152", //investment detected
     ],
@@ -38,7 +38,7 @@ const options = {
   },
   query: {
     protocol: "base", // Replace this with the blockchain protocol you are interacting with, e.g., "ethereum", "arbitrum", etc.
-    network: "sepolia", // Replace this with the specific network you are targeting, e.g., "mainnet", "testnet".
+    network: "mainnet", // Replace this with the specific network you are targeting, e.g., "mainnet", "testnet".
   },
 };
 
