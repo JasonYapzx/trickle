@@ -29,9 +29,9 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           {children}
-          <WebhookListener />
+          {/* <WebhookListener />
+          <Toaster /> */}
         </AuthProvider>
-        <Toaster />
       </body>
     </html>
   );

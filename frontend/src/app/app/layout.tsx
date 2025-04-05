@@ -15,6 +15,7 @@ import {
 import { Toaster } from "@/components/ui/sonner";
 import { NavigationItems } from "@/components/nav-items";
 import { SignIn } from "@/components/auth/sign-in";
+import { WebhookListener } from "@/components/webhook-listener";
 
 
 export const metadata: Metadata = {
@@ -57,6 +58,7 @@ export default function RootLayout({
             </SidebarContent>
           </Sidebar>
           <main className="flex-1 h-full w-full p-2 md:p-0 ml-0 md:ml-[16rem]">{children}</main>
+          <WebhookListener />
           <Toaster />
         </div>
       </SidebarProvider>
