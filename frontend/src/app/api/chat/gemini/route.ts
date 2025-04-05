@@ -39,12 +39,13 @@ export async function POST(req: Request) {
     apiKey: apiKey,
   });
 
-  const { chain, walletAddress, limit, offset, queryId } = toolDefaults;
+  const { chain, walletAddress, limit, offset, queryId, userId } = toolDefaults;
 
   const defaultsContext = [
     chain && `Chain to use: ${chain}`,
     walletAddress && `Wallet address to use: ${walletAddress}`,
     queryId && `Default Dune query ID: ${queryId}`,
+    `and User ID: ${userId}`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -291,6 +292,164 @@ export async function POST(req: Request) {
 
             return JSON.stringify({
               error: "Failed to fetch wallet transactions",
+              details:
+                error instanceof Error
+                  ? error.message
+                  : "Unknown error occurred",
+            });
+          }
+        },
+      }),
+      queryDuneAnalytics: tool({
+        description: "Query Dune Analytics for blockchain data insights",
+        parameters: z.object({
+          limit: z
+            .number()
+            .optional()
+            .describe("Maximum number of results to return"),
+          params: z
+            .record(z.string())
+            .optional()
+            .describe("Optional parameters to pass to the query"),
+        }),
+        execute: async (params, { toolCallId }) => {
+          const executionParams = {
+            limit: params.limit || limit || 25,
+            params: params.params || {},
+          };
+
+          data.appendMessageAnnotation({
+            type: "tool-status",
+            toolCallId,
+            status: "in-progress",
+          });
+
+          try {
+            const duneApiKey = process.env.NEXT_PUBLIC_DUNE_API_KEY;
+
+            if (!duneApiKey) {
+              throw new Error("Dune API key is missing");
+            }
+
+            const queryParams = new URLSearchParams({
+              limit: executionParams.limit.toString(),
+            }).toString();
+            const url = `https://api.dune.com/api/v1/query/1001498/results?${queryParams}`;
+            const response = await axios({
+              method: "get",
+              url: url,
+              headers: {
+                "X-Dune-API-Key": duneApiKey,
+                Accept: "application/json",
+              },
+              validateStatus: (status) => status === 200,
+            });
+
+            const duneResponse = response.data;
+            const formattedResults = {
+              executionId: duneResponse.execution_id,
+              status: duneResponse.state,
+              executedAt: duneResponse.execution_ended_at,
+              wallets: duneResponse.result.rows.map((row: any) => ({
+                address: row.address,
+                balance: row.balance_amount,
+                rank: row.rank_id,
+                detailLink: row.detail_link?.replace(/(<([^>]+)>)/gi, ""),
+                etherscanLink: `https://etherscan.io/address/${row.address}`,
+              })),
+            };
+
+            data.appendMessageAnnotation({
+              type: "tool-status",
+              toolCallId,
+              status: "completed",
+            });
+
+            data.appendMessageAnnotation({
+              type: "custom-render",
+              toolCallId,
+              componentName: "DuneAnalytics",
+              data: formattedResults,
+            });
+
+            return JSON.stringify(formattedResults);
+          } catch (error) {
+            console.error("Dune Analytics query error:", error);
+            data.appendMessageAnnotation({
+              type: "tool-status",
+              toolCallId,
+              status: "error",
+            });
+
+            return JSON.stringify({
+              error: "Failed to fetch Dune Analytics data",
+              details:
+                error instanceof Error
+                  ? error.message
+                  : "Unknown error occurred",
+            });
+          }
+        },
+      }),
+      supaBase: tool({
+        description:
+          'Query user profile and portfolio data from Supabase. Use this for identity questions like "who am I" or "what is my name"',
+        parameters: z.object({
+          table: z
+            .enum(["users", "portfolio"])
+            .describe("The table to query from"),
+          userId: z.string().optional().describe("The user ID to query for"),
+        }),
+        execute: async (params, { toolCallId }) => {
+          data.appendMessageAnnotation({
+            type: "tool-status",
+            toolCallId,
+            status: "in-progress",
+          });
+
+          try {
+            const supabase = createClient();
+            const { table } = params;
+
+            const { data: result, error } = await supabase
+              .from(table)
+              .select("id,walletAddress,name,displayPicture,email")
+              .eq("id", params.userId)
+              .single();
+
+            console.log(data, params.userId);
+
+            if (error) throw error;
+
+            const formattedResults = {
+              table,
+              data: result,
+            };
+
+            data.appendMessageAnnotation({
+              type: "tool-status",
+              toolCallId,
+              status: "completed",
+            });
+
+            data.appendMessageAnnotation({
+              type: "custom-render",
+              toolCallId,
+              componentName: "ProfileData",
+              data: formattedResults,
+            });
+
+            return JSON.stringify(formattedResults);
+          } catch (error) {
+            console.error("Supabase query error:", error);
+            data.appendMessageAnnotation({
+              type: "tool-status",
+              toolCallId,
+              status: "error",
+            });
+
+            return JSON.stringify({
+              error: "Failed to fetch profile data",
               details:
                 error instanceof Error
                   ? error.message
