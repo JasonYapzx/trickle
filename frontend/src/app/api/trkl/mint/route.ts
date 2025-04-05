@@ -1,18 +1,36 @@
 import TRKL_ABI from '@/abi/TRKL.json';
+import axios from "axios";
 import { ethers } from 'ethers';
 import { NextRequest, NextResponse } from 'next/server';
+
 export const maxDuration = 60;
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-
         const { userAddress, amount } = body
+
+        const response = await axios.post(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/trkl/mint?address=${userAddress}`,
+            {
+                userAddress: userAddress,
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        const ownsNFT = response.data?.ownsNFT ?? false;
+
+        const mintMultiplier = ownsNFT ? 1 : 1.5
+        const mintAmount = mintMultiplier * amount;
 
         const provider = new ethers.JsonRpcProvider(process.env.SAGA_RPC_URL)
         const wallet = new ethers.Wallet(process.env.SAGA_WALLET_PRIVATE_KEY!, provider)
         const contract = new ethers.Contract(process.env.TRKL_CONTRACT_ADDRESS!, TRKL_ABI, wallet)
 
-        const tx = await contract.mint(userAddress, ethers.parseUnits(amount.toString(), 18))
+        const tx = await contract.mint(userAddress, ethers.parseUnits(mintAmount.toString(), 18))
         await tx.wait()
 
         // Check balance after mint
