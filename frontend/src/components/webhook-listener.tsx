@@ -6,10 +6,54 @@ import { createClient } from "@/lib/supabase";
 
 // Track processed notifications to prevent duplicates
 const processedNotifications = new Set();
+const supabase = createClient();
 
 export function WebhookListener() {
   // Use a ref to track if we've already subscribed
   const hasSubscribed = useRef(false);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("nodit-stream")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "nodit-stream",
+        },
+        (payload) => {
+          console.log("Nodit-stream notification received:", payload);
+          const notification = payload.new;
+          const name = notification["name"];
+          const amount = notification["amount"];
+
+          let title = "";
+
+          if (name === "investment-detected") {
+            title = `Transaction logged`;
+          }
+
+          toast.success(title, {
+            description: (
+              <div className="text-black">
+                A new transaction of $${(amount / 100).toFixed(2)} has been
+                logged via Trickle's Chrome Extension.
+              </div>
+            ),
+            duration: 30000,
+            icon: "🔔",
+            style: { color: "#000", borderColor: "#68d391" },
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log("Cleaning up nodit-stream channel");
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   useEffect(() => {
     // Prevent duplicate subscriptions
@@ -19,7 +63,6 @@ export function WebhookListener() {
     }
 
     hasSubscribed.current = true;
-    const supabase = createClient();
 
     console.log("WebhookListener initialized, setting up channel...");
 
@@ -37,14 +80,16 @@ export function WebhookListener() {
           console.log("Notification received:", payload);
 
           const notification = payload.new;
-          
+
           // Check if we've already processed this notification
           const notificationId = notification.id;
           if (processedNotifications.has(notificationId)) {
-            console.log(`Already processed notification ${notificationId}, skipping...`);
+            console.log(
+              `Already processed notification ${notificationId}, skipping...`
+            );
             return;
           }
-          
+
           // Mark as processed to prevent duplicates
           processedNotifications.add(notificationId);
 
