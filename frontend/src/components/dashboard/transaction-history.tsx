@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -140,15 +140,17 @@ const shortenAddress = (address: string) => {
 };
 
 interface TransactionHistoryProps {
-  type?: "All" | "Send" | "Receive" | "Transfer";
+  type?: string;
   address: string;
   chain_id: string;
+  setTransactionTypes: Dispatch<SetStateAction<string[]>>;
 }
 
 export function TransactionHistory({
   type,
   address,
   chain_id,
+  setTransactionTypes,
 }: TransactionHistoryProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<
@@ -171,6 +173,16 @@ export function TransactionHistory({
           `/api/1inch/history?${params.toString()}`
         );
         const transactionData = await transactionRes.json();
+
+        const uniqueTypes: string[] = Array.from(
+          new Set(
+            transactionData.items
+              .map((trx: any) => trx.details?.type)
+              .filter((type): type is string => Boolean(type))
+          ) as Set<string> // 👈 Assert Set<string>
+        ).sort((a, b) => a.localeCompare(b));
+
+        setTransactionTypes(uniqueTypes);
 
         const tokenParams = new URLSearchParams();
         tokenParams.append("chain_id", chain_id);
@@ -201,7 +213,7 @@ export function TransactionHistory({
               ...trx,
               tokenInfo: {
                 ...tokenData?.[
-                trx?.details?.tokenActions?.[tokenActions.length - 1]?.address
+                  trx?.details?.tokenActions?.[tokenActions.length - 1]?.address
                 ],
               },
             };
@@ -407,7 +419,9 @@ export function TransactionHistory({
                   <TableHead>Asset</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Value</TableHead>
-                  <TableHead className="hidden md:table-cell">From/To</TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    From/To
+                  </TableHead>
                   <TableHead className="hidden lg:table-cell">Time</TableHead>
                   <TableHead className="hidden lg:table-cell">Status</TableHead>
                 </TableRow>
@@ -477,8 +491,8 @@ export function TransactionHistory({
                             tx.status === "completed"
                               ? "default"
                               : tx.status === "fail"
-                                ? "destructive"
-                                : "outline"
+                              ? "destructive"
+                              : "outline"
                           }
                         >
                           {tx.status}
