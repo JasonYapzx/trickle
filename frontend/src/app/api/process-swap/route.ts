@@ -163,7 +163,7 @@ export async function POST(request: Request) {
 
                 console.log(`emit swap event data:`, emitSwapEvent.data);
                 console.log("Starting to mint TRKL Token")
-                const response = await axios.post(
+                axios.post(
                     `${process.env.NEXT_PUBLIC_BASE_URL}/api/trkl/mint`,
                     {
                         userAddress: walletAddress,
@@ -175,11 +175,6 @@ export async function POST(request: Request) {
                         },
                     }
                 );
-
-                console.log("✅ Mint Successful!");
-                console.log("🧾 Transaction Hash:", response.data.txHash);
-                console.log("💰 New TRKL Balance:", response.data.newBalance);
-
             }
         } catch (error: any) {
             console.log("erorr here", error.response);
