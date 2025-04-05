@@ -297,3 +297,40 @@ export const getTokenPricesByContract = tool({
     }));
   },
 });
+
+export const getTokenPricesByContract1Inch = tool({
+  parameters: z.object({
+    protocol: z.string(),
+    network: z.string(),
+    contractAddresses: z.array(z.string()),
+  }),
+  execute: async ({ contractAddresses, protocol, network }) => {
+    console.log("getTokenPricesByContract1Inch", {
+      contractAddresses,
+      protocol,
+      network,
+    });
+    const url = `https://api.1inch.dev/token-details/v1.0/prices/change/8453`;
+    const options = {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        "X-API-KEY": process.env.NEXT_PUBLIC_ONE_INCH_API!,
+      },
+      body: JSON.stringify({
+        tokenAddresses: contractAddresses,
+        interval: "14d",
+      }),
+    };
+    const response = await fetch(url, options);
+    const data = await response.json();
+
+    console.log(data);
+
+    return data?.map((token: any) => ({
+      priceChangeFor14d: token.inUSD,
+      percentChangeFor14d: token.inPercent,
+    }));
+  },
+});
